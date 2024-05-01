@@ -1,0 +1,9 @@
+<library path="alphabot_firmware">
+    <class name="alphabot_firmware/AlphabotInterface"
+      type="alphabot_firmware::AlphabotInterface"
+      base_class_type="hardware_interface::SystemInterface">
+      <description>
+        Alphabot Hardware Interface
+      </description>
+    </class>
+  </library>
