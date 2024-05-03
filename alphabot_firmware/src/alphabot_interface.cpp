@@ -29,27 +29,27 @@ AlphabotInterface::~AlphabotInterface()
 
 CallbackReturn AlphabotInterface::on_init(const hardware_interface::HardwareInfo &hardware_info)
 {
-  CallbackReturn result = hardware_interface::SystemInterface::on_init(hardware_info);
-  if (result != CallbackReturn::SUCCESS)
-  {
-    return result;
-  }
+    CallbackReturn result = hardware_interface::SystemInterface::on_init(hardware_info);
+    if (result != CallbackReturn::SUCCESS)
+    {
+      return result;
+    }
 
-  try
-  {
-    port_ = info_.hardware_parameters.at("port");
-  }
-  catch (const std::out_of_range &e)
-  {
-    RCLCPP_FATAL(rclcpp::get_logger("AlphabotInterface"), "No Serial Port provided! Aborting");
-    return CallbackReturn::FAILURE;
-  }
+    try
+    {
+      port_ = info_.hardware_parameters.at("port");
+    }
+    catch (const std::out_of_range &e)
+    {
+      RCLCPP_FATAL(rclcpp::get_logger("AlphabotInterface"), "No Serial Port provided! Aborting");
+      return CallbackReturn::FAILURE;
+    }
 
-  velocity_commands_.reserve(info_.joints.size());
-  position_states_.reserve(info_.joints.size());
-  velocity_states_.reserve(info_.joints.size());
+    velocity_commands_.reserve(info_.joints.size());
+    position_states_.reserve(info_.joints.size());
+    velocity_states_.reserve(info_.joints.size());
 
-  return CallbackReturn::SUCCESS;
+    return CallbackReturn::SUCCESS;
 }
 
 

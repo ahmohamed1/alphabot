@@ -11,10 +11,11 @@ find_package(ament_cmake_python REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(PkgConfig)
+find_package(rclcpp_lifecycle REQUIRED)
 find_package(hardware_interface REQUIRED)
 find_package(pluginlib REQUIRED)
-find_package(rclcpp_lifecycle REQUIRED)
-find_package(PkgConfig)
+
 pkg_check_modules(SERIAL libserial)
 
 ament_python_install_package(${PROJECT_NAME})
@@ -37,6 +38,29 @@ ament_target_dependencies(${PROJECT_NAME}
 
 pluginlib_export_plugin_description_file(hardware_interface alphabot_interface.xml)
 
+add_executable(simple_serial_receiver src/simple_serial_receiver.cpp)
+ament_target_dependencies(simple_serial_receiver rclcpp std_msgs)
+target_include_directories(simple_serial_receiver PUBLIC
+ "${SERIAL_INCLUDE_DIRS}")
+target_link_libraries(simple_serial_receiver
+ "${SERIAL_LDFLAGS}")
+
+add_executable(simple_serial_transmitter src/simple_serial_transmitter.cpp)
+ament_target_dependencies(simple_serial_transmitter rclcpp std_msgs)
+target_include_directories(simple_serial_transmitter PUBLIC
+ "${SERIAL_INCLUDE_DIRS}")
+target_link_libraries(simple_serial_transmitter
+ "${SERIAL_LDFLAGS}")
+
+
+ install(TARGETS
+ simple_serial_receiver
+ simple_serial_transmitter
+ ARCHIVE DESTINATION lib
+ LIBRARY DESTINATION lib
+ RUNTIME DESTINATION bin
+ DESTINATION lib/${PROJECT_NAME}
+)
 
 install(
   TARGETS ${PROJECT_NAME}
