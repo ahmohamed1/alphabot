@@ -16,13 +16,15 @@ def generate_launch_description():
     )
 
     simple_controller = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=["simple_velocity_controller",
-                "--controller-manager",
-                "/controller_manager"
-        ]
+    package="controller_manager",
+    executable="spawner",
+    arguments=[
+        "simple_velocity_controller",
+        "--controller-manager",
+        "/controller_manager"
+    ]
     )
+
 
     return LaunchDescription(
         [

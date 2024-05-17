@@ -18,15 +18,7 @@ public:
         "serial_transmitter", 10, std::bind(&SimpleSerialTransmitter::msgCallback, this, _1));
     
     arduino_.Open(port_);
-    arduino_.SetBaudRate(LibSerial::BaudRate::BAUD_57600);
-    arduino_.SetCharacterSize(LibSerial::CharacterSize::CHAR_SIZE_8);
-    arduino_.SetParity(LibSerial::Parity::PARITY_NONE);
-    arduino_.SetStopBits(LibSerial::StopBits::STOP_BITS_1);
-    arduino_.SetFlowControl(LibSerial::FlowControl::FLOW_CONTROL_NONE);
-    arduino_.SetDTR(false);
-    arduino_.SetRTS(false);
-    // Flush buffers.
-    arduino_.FlushIOBuffers();
+    arduino_.SetBaudRate(LibSerial::BaudRate::BAUD_115200);
   }
 
   ~SimpleSerialTransmitter()
@@ -41,18 +33,8 @@ private:
 
   void msgCallback(const std_msgs::msg::String &msg)
   {
-    // RCLCPP_INFO_STREAM(this->get_logger(), "New message received, publishing on serial: " << msg.data);
-    
-    std::cout<< "We send: " << msg.data<<std::endl;
-    arduino_.Write(msg.data+'\r');
-    std::string message;
-    arduino_.ReadLine(message);
-    // static const std::string delimiter = ",";
-    // const size_t del_pos = message.find(delimiter);
-    // const std::string token_1 = message.substr(0, del_pos).c_str();
-    // const std::string token_2 = message.substr(del_pos + delimiter.length()).c_str();
-    // std::cout<< "We recived: " <<std::atoi(token_1.c_str())<<","<< std::atoi(token_2.c_str())<<std::endl;
-    std::cout<< "We recived: " <<message<<std::endl;
+    RCLCPP_INFO_STREAM(this->get_logger(), "New message received, publishing on serial: " << msg.data);
+    arduino_.Write(msg.data);
   }
 };
 

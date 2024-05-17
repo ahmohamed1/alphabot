@@ -137,21 +137,30 @@ CallbackReturn AlphabotInterface::on_deactivate(const rclcpp_lifecycle::State &)
 hardware_interface::return_type AlphabotInterface::read(const rclcpp::Time &,
                                                           const rclcpp::Duration &)
 {
-  // Interpret the string
+  // Calculate time delta
+  // auto new_time = std::chrono::system_clock::now();
+  // std::chrono::duration<double> diff = new_time - time_;
+  // double deltaSeconds = diff.count();
+  // time_ = new_time;
+
   if(arduino_.IsDataAvailable())
   {
     std::string message;
     arduino_.ReadLine(message);
-    if(message.at(0) == 'v')
-    {
-      message.erase(0,1);
-      std::string delimiter = ",";
-      size_t del_pos = message.find(delimiter);
-      std::string token_1 = message.substr(0, del_pos);
-      std::string token_2 = message.substr(del_pos + delimiter.length());
-      velocity_states_.at(0) = std::stod(token_1.c_str());
-      velocity_states_.at(1) = std::stod(token_2.c_str());
-    }
+    std::stringstream ss(message);
+    std::string res;
+    
+    std::string delimiter = ",";
+    size_t del_pos = message.find(delimiter);
+    std::string token_1 = message.substr(0, del_pos);
+    std::string token_2 = message.substr(del_pos + delimiter.length());
+
+    float val_1 = std::atof(token_1.c_str());
+    float val_2 = std::atof(token_2.c_str());
+
+    velocity_states_.at(0) = val_1;
+    velocity_states_.at(1) = val_2;
+
   }
   return hardware_interface::return_type::OK;
 }
@@ -160,18 +169,20 @@ hardware_interface::return_type AlphabotInterface::read(const rclcpp::Time &,
 hardware_interface::return_type AlphabotInterface::write(const rclcpp::Time &,
                                                           const rclcpp::Duration &)
 {
-
-   std::stringstream message_stream;
-        message_stream << std::fixed <<std::setprecision(2) << "v" << 
-        velocity_commands_[0] <<"," <<velocity_commands_[1] <<"\n";
+// Implement communication protocol with the Arduino
+  std::stringstream message_stream;
+  message_stream << std::fixed << std::setprecision(2) << 
+  "r" << velocity_commands_.at(0) << 
+  ",l"  << velocity_commands_.at(1) << ",\n";
 
   try
   {
+    // RCLCPP_INFO_STREAM(rclcpp::get_logger(), "New message received, publishing on serial: " << message_stream.str());
     arduino_.Write(message_stream.str());
   }
   catch (...)
   {
-    RCLCPP_ERROR_STREAM(rclcpp::get_logger("AlphabotInterface"),
+    RCLCPP_ERROR_STREAM(rclcpp::get_logger("BumperbotInterface"),
                         "Something went wrong while sending the message "
                             << message_stream.str() << " to the port " << port_);
     return hardware_interface::return_type::ERROR;
