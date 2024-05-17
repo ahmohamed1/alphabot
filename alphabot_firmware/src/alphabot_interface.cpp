@@ -177,12 +177,12 @@ hardware_interface::return_type AlphabotInterface::write(const rclcpp::Time &,
 
   try
   {
-    // RCLCPP_INFO_STREAM(rclcpp::get_logger(), "New message received, publishing on serial: " << message_stream.str());
+    // RCLCPP_INFO_STREAM(rclcpp::get_logger("AlphabotInterface"), "New message received, publishing on serial: " << message_stream.str());
     arduino_.Write(message_stream.str());
   }
   catch (...)
   {
-    RCLCPP_ERROR_STREAM(rclcpp::get_logger("BumperbotInterface"),
+    RCLCPP_ERROR_STREAM(rclcpp::get_logger("AlphabotInterface"),
                         "Something went wrong while sending the message "
                             << message_stream.str() << " to the port " << port_);
     return hardware_interface::return_type::ERROR;

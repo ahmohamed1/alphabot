@@ -1,9 +1,8 @@
 controller_manager:
   ros__parameters:
-    update_rate: 100 # Hz
-    use_sim_time: true
+    update_rate: 30 # Hz
 
-    bumperbot_controller:
+    alphabot_controller:
       type: diff_drive_controller/DiffDriveController
 
     joint_state_broadcaster:
@@ -13,10 +12,10 @@ controller_manager:
       type: velocity_controllers/JointGroupVelocityController
 
 
-bumperbot_controller:
+alphabot_controller:
   ros__parameters:
     type        : diff_drive_controller/DiffDriveController
-    use_stamped_vel: true
+    use_stamped_vel: false
     left_wheel_names  : ['wheel_left_joint']
     right_wheel_names : ['wheel_right_joint']
 
