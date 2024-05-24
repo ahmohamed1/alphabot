@@ -88,6 +88,8 @@ std::vector<hardware_interface::CommandInterface> AlphabotInterface::export_comm
 CallbackReturn AlphabotInterface::on_activate(const rclcpp_lifecycle::State &)
 {
   RCLCPP_INFO(rclcpp::get_logger("AlphabotInterface"), "Starting robot hardware ...");
+  RCLCPP_INFO_STREAM(rclcpp::get_logger("AlphabotInterface"), "New message received: "<< CONVERT_TO_RPM_FACTOR);
+    
 
   // Reset commands and states
   velocity_commands_ = { 0.0, 0.0 };
@@ -186,14 +188,17 @@ hardware_interface::return_type AlphabotInterface::write(const rclcpp::Time &,
                                                           const rclcpp::Duration &)
 {
 // Implement communication protocol with the Arduino
+  double left_rpm = velocity_commands_[0] * CONVERT_TO_RPM_FACTOR;
+  double right_rpm = velocity_commands_[1] * CONVERT_TO_RPM_FACTOR;
+
   std::stringstream message_stream;
   message_stream << std::fixed << std::setprecision(2) << 
-  "r" << velocity_commands_.at(0) << 
-  ",l"  << velocity_commands_.at(1) << ",\n";
-
+  "r" << left_rpm << 
+  ",l"  << right_rpm << ",\n";
+  
   try
   {
-    // RCLCPP_INFO_STREAM(rclcpp::get_logger("AlphabotInterface"), "New message received, publishing on serial: " << message_stream.str());
+    // RCLCPP_INFO_STREAM(rclcpp::get_logger("AlphabotInterface"), "New message received: "<< CONVERT_TO_RPM_FACTOR <<" , " << message_stream.str());
     arduino_.Write(message_stream.str());
   }
   catch (...)
