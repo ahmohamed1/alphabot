@@ -138,10 +138,11 @@ hardware_interface::return_type AlphabotInterface::read(const rclcpp::Time &,
                                                           const rclcpp::Duration &)
 {
   // Calculate time delta
-  // auto new_time = std::chrono::system_clock::now();
-  // std::chrono::duration<double> diff = new_time - time_;
-  // double deltaSeconds = diff.count();
-  // time_ = new_time;
+  auto new_time = std::chrono::system_clock::now();
+  std::chrono::duration<double> diff = new_time - time_;
+  double deltaSeconds = diff.count();
+  time_ = new_time;
+
 
   if(arduino_.IsDataAvailable())
   {
@@ -155,13 +156,28 @@ hardware_interface::return_type AlphabotInterface::read(const rclcpp::Time &,
     std::string token_1 = message.substr(0, del_pos);
     std::string token_2 = message.substr(del_pos + delimiter.length());
 
-    float val_1 = std::atof(token_1.c_str());
-    float val_2 = std::atof(token_2.c_str());
+    tick_left = std::atof(token_1.c_str());
+    tick_right = std::atof(token_2.c_str());
 
-    velocity_states_.at(0) = val_1;
-    velocity_states_.at(1) = val_2;
+    //---------------------------------------//
 
+    left_current_pos = tick_left * RADIUS_PER_TICK;
+    right_current_pos = tick_right * RADIUS_PER_TICK;
+
+    left_velocity = (left_current_pos - left_prevouse_pos) / deltaSeconds;
+    right_velocity = (right_current_pos - right_prevouse_pos) / deltaSeconds;
+
+    position_states_[0] = left_current_pos;
+    position_states_[1] = right_current_pos;
+    velocity_states_[0] = left_velocity;
+    velocity_states_[0] = right_velocity;
+
+    left_prevouse_pos = left_current_pos;
+    right_prevouse_pos = right_current_pos;
+    
   }
+
+
   return hardware_interface::return_type::OK;
 }
 

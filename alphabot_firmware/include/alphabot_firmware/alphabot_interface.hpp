@@ -9,6 +9,8 @@
 
 #include <vector>
 #include <string>
+#include <cmath>
+// #include "alphabot_firmware/base_model.h"
 
 
 namespace alphabot_firmware
@@ -39,6 +41,30 @@ private:
   std::vector<double> velocity_commands_;
   std::vector<double> position_states_;
   std::vector<double> velocity_states_;
+
+  // Model base_model;
+  std::chrono::time_point<std::chrono::system_clock> time_;
+
+  volatile long tick_left = 0;
+  volatile long tick_right = 0;
+
+  double left_current_pos = 0;
+  double right_current_pos = 0;
+
+  double left_prevouse_pos = 0;
+  double right_prevouse_pos = 0;
+
+  float WHEEL_DIAMETER = 70/1000; //m
+  float WHEEL_SEPERATION = 236/1000; //m
+  int TICK_PER_REVOLUTION = 231; 
+  float RADIUS_PER_TICK = (2*M_PI)/TICK_PER_REVOLUTION;
+
+  double left_velocity = 0;
+  double right_velocity = 0;
+
+  // cm traveled each gear tick
+  const double DIST_PER_TICK = (WHEEL_DIAMETER * 3.14) / TICK_PER_REVOLUTION;
+  
 };
 }  // namespace Alphabot_firmware
 
