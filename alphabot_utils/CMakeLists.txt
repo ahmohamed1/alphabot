@@ -24,14 +24,16 @@ ament_target_dependencies(safety_stop rclcpp std_msgs sensor_msgs geometry_msgs 
 
 ament_python_install_package(${PROJECT_NAME})
 
+
 install(TARGETS
   safety_stop
   DESTINATION lib/${PROJECT_NAME}
 )
 
-# install(PROGRAMS
-#   ${PROJECT_NAME}/safety_stop.py
-#   DESTINATION lib/${PROJECT_NAME}
-# )
+
+install(PROGRAMS
+  ${PROJECT_NAME}/safety_stop.py
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 ament_package()
