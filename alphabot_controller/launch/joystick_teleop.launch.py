@@ -9,10 +9,14 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
 
+
+    joy_params = os.path.join(get_package_share_directory("alphabot_controller"), "config", "joy_teleop.yaml")
+    
     joy_teleop = Node(
-        package="joy_teleop",
-        executable="joy_teleop",
-        parameters=[os.path.join(get_package_share_directory("alphabot_controller"), "config", "joy_teleop.yaml")],
+        package="teleop_twist_joy",
+        executable="teleop_node",
+        parameters=[joy_params],
+        remappings=[('/cmd_vel','/cmd_vel_joy')]
     )
 
     joy_node = Node(
@@ -22,7 +26,7 @@ def generate_launch_description():
         parameters=[os.path.join(get_package_share_directory("alphabot_controller"), "config", "joy_config.yaml")]
     )
 
-    alphabot_controller_package = get_package_share_directory("alphabor_controller")
+    alphabot_controller_package = get_package_share_directory("alphabot_controller")
 
     twist_mux_launch = IncludeLaunchDescription(
         os.path.join(
@@ -31,10 +35,10 @@ def generate_launch_description():
             "twist_mux_launch.py"
         ),
         launch_arguments={
-            "cmd_vel_out": "alphabot_controller/cmd_vel_unstamped",
-            "config_topics": os.path.join(alphabot_controller_package,"config","twist_mux_topic.yaml"),
-            "config_locks":os.path.join(alphabot_controller_package,"config","twist_mux_lock.yaml"),
-            "config_joy":os.path.join(alphabot_controller_package,"config","twist_mux_joy.yaml"),
+            "cmd_vel_out": "/alphabot_controller/cmd_vel_unstamped",
+            "config_topics": os.path.join(alphabot_controller_package,"config","twist_mux.yaml"),
+            # "config_locks":os.path.join(alphabot_controller_package,"config","twist_mux_lock.yaml"),
+            # "config_joy":os.path.join(alphabot_controller_package,"config","twist_mux_joy.yaml"),
         }.items()
     )
 

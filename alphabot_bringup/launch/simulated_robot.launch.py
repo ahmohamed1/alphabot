@@ -5,6 +5,9 @@ from ament_index_python.packages import get_package_share_directory
 
 
 def generate_launch_description():
+
+    alphabot_controller_package = get_package_share_directory("alphabot_controller")
+
     gazebo = IncludeLaunchDescription(
         os.path.join(
             get_package_share_directory("alphabot_description"),
@@ -25,16 +28,22 @@ def generate_launch_description():
         }.items(),
     )
     
-    joystick = IncludeLaunchDescription(
+    twist_mux_launch = IncludeLaunchDescription(
         os.path.join(
-            get_package_share_directory("alphabot_controller"),
+            get_package_share_directory("twist_mux"),
             "launch",
-            "joystick_teleop.launch.py"
+            "twist_mux_launch.py"
         ),
+        launch_arguments={
+            "cmd_vel_out": "/alphabot_controller/cmd_vel_unstamped",
+            "config_topics": os.path.join(alphabot_controller_package,"config","twist_mux.yaml"),
+            # "config_locks":os.path.join(alphabot_controller_package,"config","twist_mux_lock.yaml"),
+            # "config_joy":os.path.join(alphabot_controller_package,"config","twist_mux_joy.yaml"),
+        }.items()
     )
     
     return LaunchDescription([
         gazebo,
         controller,
-        # joystick,
+        twist_mux_launch,
     ])
