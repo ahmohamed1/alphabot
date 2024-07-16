@@ -37,7 +37,7 @@ def generate_launch_description():
         launch_arguments={
             "cmd_vel_out": "/alphabot_controller/cmd_vel_unstamped",
             "config_topics": os.path.join(alphabot_controller_package,"config","twist_mux.yaml"),
-            # "config_locks":os.path.join(alphabot_controller_package,"config","twist_mux_lock.yaml"),
+            "config_locks":os.path.join(alphabot_controller_package,"config","twist_mux_lock.yaml"),
             # "config_joy":os.path.join(alphabot_controller_package,"config","twist_mux_joy.yaml"),
         }.items()
     )
