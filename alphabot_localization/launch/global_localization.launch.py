@@ -19,6 +19,8 @@ def generate_launch_description():
 
     map_name = LaunchConfiguration("map_name")
     use_sim_time = LaunchConfiguration("use_sim_time")
+    lifecycle_nodes = ["map_server"]
+
 
     map_path = PathJoinSubstitution([
         get_package_share_directory("alphabot_mapping"),
@@ -38,8 +40,22 @@ def generate_launch_description():
         ]
     )
 
+    nav2_lifecycle_manager = Node(
+        package="nav2_lifecycle_manager",
+        executable="lifecycle_manager",
+        name="lifecycle_manager_localization",
+        output="screen",
+        parameters=[
+            {"node_names":lifecycle_nodes},
+            {"use_sim_time": use_sim_time},
+            {"autostart":True}
+        ]
+
+    )
+
     return LaunchDescription([
         use_sim_time_arg,
         map_name_arg,
-        nav2_map_server
+        nav2_map_server,
+        nav2_lifecycle_manager
     ])
