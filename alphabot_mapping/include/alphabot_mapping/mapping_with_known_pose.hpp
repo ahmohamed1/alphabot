@@ -9,7 +9,10 @@
 
 namespace alphabot_mapping
 {
-
+    inline const double PRIOR_PROB = 0.5;
+    inline const double OCC_PROB = 0.9;
+    inline const double FREE_PROB = 0.35;
+    
     struct Pose
     {
         Pose() = default;
@@ -23,6 +26,11 @@ namespace alphabot_mapping
     Pose coordinate_to_pose(const double px, const double py, const nav_msgs::msg::MapMetaData & map_info);
     bool pose_on_map(const Pose & pose, const nav_msgs::msg::MapMetaData & map_info);
 
+    std::vector<Pose> bresenham(const Pose & start, const Pose & end);
+    std::vector<std::pair<Pose, double>> inverse_sensor_model(const Pose & robot_pose, const Pose & beam_pose);
+
+    double prob2logodds(double p);
+    double logodd2prob(double l);
 
 class MappingWihtKnownPoses : public rclcpp::Node
 {
@@ -36,6 +44,7 @@ private:
     void timer_callback();
 
     nav_msgs::msg::OccupancyGrid map_;
+    std::vector<double> probability_map_;
     rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr scan_sub_;
     rclcpp::Publisher<nav_msgs::msg::OccupancyGrid>::SharedPtr map_pub_;
     rclcpp::TimerBase::SharedPtr time_;
@@ -43,5 +52,6 @@ private:
     std::shared_ptr<tf2_ros::TransformListener> tf_listener_{nullptr};
 
 };
-}
+
+} // end of namespae
 #endif
