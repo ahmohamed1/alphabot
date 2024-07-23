@@ -34,7 +34,7 @@ mapping_with_known_poses
 )
 
 install(
-  DIRECTORY maps
+  DIRECTORY maps launch config rviz
   DESTINATION share/${PROJECT_NAME}
 )
 

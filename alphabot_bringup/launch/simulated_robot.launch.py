@@ -2,11 +2,17 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.conditions import IfCondition, UnlessCondition
+from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
 
 def generate_launch_description():
+
+    use_slam = LaunchConfiguration("use_slam")
+
+    use_slam_arg = DeclareLaunchArgument("use_slam", default_value="false")
 
     alphabot_controller_package = get_package_share_directory("alphabot_controller")
 
@@ -30,6 +36,14 @@ def generate_launch_description():
         }.items(),
     )
 
+    joystick = IncludeLaunchDescription(
+        os.path.join(
+            get_package_share_directory("alphabot_controller"),
+            "launch",
+            "joystick_teleop.launch.py",
+        ),
+    )
+
     twist_mux_node = Node(
         package="twist_mux",
         executable="twist_mux",
@@ -39,10 +53,62 @@ def generate_launch_description():
         ],
     )
 
+    localization = IncludeLaunchDescription(
+        os.path.join(
+            get_package_share_directory("alphabot_localization"),
+            "launch",
+            "global_localization.launch.py",
+        ),
+        condition=UnlessCondition(use_slam),
+    )
+
+    slam = IncludeLaunchDescription(
+        os.path.join(
+            get_package_share_directory("alphabot_mapping"), "launch", "slam.launch.py"
+        ),
+        condition=IfCondition(use_slam),
+    )
+
+    rviz_localization = Node(
+        package="rviz2",
+        executable="rviz2",
+        arguments=[
+            "-d",
+            os.path.join(
+                get_package_share_directory("alphabot_localization"),
+                "rviz",
+                "global_localization.rviz",
+            ),
+        ],
+        output="screen",
+        parameters=[{"use_sim_time": True}],
+        condition=UnlessCondition(use_slam),
+    )
+
+    rviz_slam = Node(
+        package="rviz2",
+        executable="rviz2",
+        arguments=[
+            "-d",
+            os.path.join(
+                get_package_share_directory("alphabot_mapping"), "rviz", "slam.rviz"
+            ),
+        ],
+        output="screen",
+        parameters=[{"use_sim_time": True}],
+        condition=IfCondition(use_slam),
+    )
+
     return LaunchDescription(
         [
+            use_slam_arg,
             gazebo,
             controller,
+            # joystick,
             twist_mux_node,
+            localization,
+            slam,
+            rviz_localization,
+            rviz_slam,
         ]
     )
