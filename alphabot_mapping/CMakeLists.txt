@@ -18,8 +18,8 @@ find_package(tf2 REQUIRED)
 
 include_directories(include)
 
-add_executable(mapping_with_known_pose src/mapping_with_known_pose.cpp)
-ament_target_dependencies(mapping_with_known_pose rclcpp sensor_msgs tf2_ros nav_msgs geometry_msgs tf2)
+add_executable(mapping_with_known_poses src/mapping_with_known_poses.cpp)
+ament_target_dependencies(mapping_with_known_poses rclcpp sensor_msgs tf2_ros nav_msgs geometry_msgs tf2)
 
 ament_python_install_package(${PROJECT_NAME})
 
@@ -29,7 +29,7 @@ install(
 )
 
 install(TARGETS
-  mapping_with_known_pose
+mapping_with_known_poses
   DESTINATION lib/${PROJECT_NAME}
 )
 
