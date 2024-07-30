@@ -9,6 +9,11 @@ To build the map, you can run the following command:
 ```bash
 ros2 launch slam_toolbox online_async_launch.py params_file:=src/alphabot/alphabot_localization/config/mapper_params_online_async.yaml use_sim_time:=true
 ```
+### option: to run nav2 alongside of slam 
+
+```bash
+ros2 launch nav2_bringup navigation_launch.py use_sim_time:=true
+```
 
 ## Loading an Existing Map
 To load an existing map, modify the mapper_params_online_async.yaml file:
