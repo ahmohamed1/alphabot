@@ -45,7 +45,7 @@ public:
       return false;
     }
 
-    // We will be sending commands of type "twist"
+    // Send commands of type "twist"
     geometry_msgs::msg::Twist base_cmd;
     // The command will be to go forward at 0.25 m/s
     base_cmd.linear.y = base_cmd.angular.z = 0;
