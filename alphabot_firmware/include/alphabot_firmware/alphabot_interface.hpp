@@ -55,8 +55,8 @@ private:
   double right_prevouse_pos = 0;
 
   double WHEEL_DIAMETER = 0.07; //m
-  double WHEEL_SEPERATION = 236/1000; //m
-  int TICK_PER_REVOLUTION = 231; 
+  double WHEEL_SEPERATION = 0.236; //m
+  double TICK_PER_REVOLUTION = 232.0; 
   double RADIUS_PER_TICK = (2*M_PI)/TICK_PER_REVOLUTION;
   double CONVERT_TO_RPM_FACTOR = 60/(M_PI*WHEEL_DIAMETER);
   double left_velocity = 0;
@@ -64,7 +64,7 @@ private:
 
   // cm traveled each gear tick
   const double DIST_PER_TICK = (WHEEL_DIAMETER * M_PI) / TICK_PER_REVOLUTION;
-  
+
 };
 }  // namespace Alphabot_firmware
 

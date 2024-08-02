@@ -100,12 +100,26 @@ CallbackReturn AlphabotInterface::on_activate(const rclcpp_lifecycle::State &)
   {
     arduino_.Open(port_);
     arduino_.SetBaudRate(LibSerial::BaudRate::BAUD_115200);
+    
   }
   catch (...)
   {
     RCLCPP_FATAL_STREAM(rclcpp::get_logger("AlphabotInterface"),
                         "Something went wrong while interacting with port " << port_);
     return CallbackReturn::FAILURE;
+  }
+
+  try
+  {
+    // RCLCPP_INFO_STREAM(rclcpp::get_logger("AlphabotInterface"), "New message received: "<< CONVERT_TO_RPM_FACTOR <<" , " << message_stream.str());
+    arduino_.Write("e\n");
+  }
+  catch (...)
+  {
+    RCLCPP_ERROR_STREAM(rclcpp::get_logger("AlphabotInterface"),
+                        "Something went wrong while sending the message "
+                            << "e\n" << " to the port " << port_);
+    return CallbackReturn::ERROR;
   }
 
   RCLCPP_INFO(rclcpp::get_logger("AlphabotInterface"),
