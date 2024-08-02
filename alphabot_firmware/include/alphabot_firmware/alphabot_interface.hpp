@@ -55,7 +55,7 @@ private:
   double right_prevouse_pos = 0;
 
   double WHEEL_DIAMETER = 0.07; //m
-  double WHEEL_SEPERATION = 0.236; //m
+  double WHEEL_SEPERATION = 0.230; //m
   double TICK_PER_REVOLUTION = 232.0; 
   double RADIUS_PER_TICK = (2*M_PI)/TICK_PER_REVOLUTION;
   double CONVERT_TO_RPM_FACTOR = 60/(M_PI*WHEEL_DIAMETER);
