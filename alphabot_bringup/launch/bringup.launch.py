@@ -20,7 +20,6 @@ def generate_launch_description():
     
     scanner = Node(
             package='xv_11_driver',
-            namespace='scan',
             executable='xv_11_driver'
         )
     
