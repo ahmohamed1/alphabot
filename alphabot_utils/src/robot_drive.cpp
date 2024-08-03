@@ -192,8 +192,8 @@ int main(int argc, char **argv)
   rclcpp::init(argc, argv);
 
   auto driver = std::make_shared<RobotDriver>();
-  // driver->driveForwardOdom(0.5);
-  driver->turnOdom(false, 90);
+  driver->driveForwardOdom(1.81);
+  // driver->turnOdom(false, 90);
   rclcpp::shutdown();
   return 0;
 }
