@@ -20,6 +20,8 @@ private:
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_pub_;
   std::shared_ptr<tf2_ros::Buffer> tf_buffer_;
   std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
+  double Kp_linear = 0.3;  // Proportional gain for linear velocity
+  double Kp_angular = 0.4; // Proportional gain for angular velocity
 
 public:
   RobotDriver() : Node("robot_driver")
@@ -29,6 +31,14 @@ public:
     // Set up the transform listener
     tf_buffer_ = std::make_shared<tf2_ros::Buffer>(this->get_clock());
     tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
+
+    // Declare parameters
+    this->declare_parameter("Kp_linear", 0.5);
+    this->declare_parameter("Kp_angular", 0.4);
+
+    //Get initial parameter values
+    this->get_parameter("Kp_linear", Kp_linear);
+    this->get_parameter("Kp_angular", Kp_angular);
   }
 
   bool driveForwardOdom(double distance)
@@ -55,10 +65,7 @@ public:
     bool done = false;
     while (!done && rclcpp::ok())
     {
-      // Send the drive command
-      cmd_vel_pub_->publish(base_cmd);
-      rate.sleep();
-
+      
       // Get the current transform
       geometry_msgs::msg::TransformStamped current_transform;
       try
@@ -79,90 +86,104 @@ public:
       tf2::Transform relative_transform = start.inverse() * current;
       double dist_moved = relative_transform.getOrigin().length();
 
-      if (dist_moved > distance)
+      double error = distance - dist_moved;
+      base_cmd.linear.x = error*Kp_linear;
+
+      // Send the drive command
+      cmd_vel_pub_->publish(base_cmd);
+
+      if (abs(error) < 0.01)
         done = true;
+
+      rate.sleep();
+
     }
-    if (done)
-      return true;
-    return false;
-  }
 
-  bool turnOdom(bool clockwise, double degrees)
-{
-  // Convert degrees to radians
-  double radians = degrees * M_PI / 180.0;
-
-  while (radians < 0)
-    radians += 2 * M_PI;
-  while (radians > 2 * M_PI)
-    radians -= 2 * M_PI;
-
-  // Wait for the listener to get the first message
-  geometry_msgs::msg::TransformStamped start_transform;
-  try
-  {
-    start_transform = tf_buffer_->lookupTransform("base_footprint", "odom", tf2::TimePointZero, tf2::durationFromSec(1.0));
-  }
-  catch (tf2::TransformException &ex)
-  {
-    RCLCPP_ERROR(this->get_logger(), "%s", ex.what());
-    return false;
-  }
-
-  // We will be sending commands of type "twist"
-  geometry_msgs::msg::Twist base_cmd;
-  // The command will be to turn at 0.75 rad/s
-  base_cmd.linear.x = base_cmd.linear.y = 0.0;
-  base_cmd.angular.z = 0.15;
-  if (clockwise)
-    base_cmd.angular.z = -base_cmd.angular.z;
-
-  // The axis we want to be rotating by
-  tf2::Vector3 desired_turn_axis(0, 0, 1);
-  if (!clockwise)
-    desired_turn_axis = -desired_turn_axis;
-
-  rclcpp::Rate rate(10.0);
-  bool done = false;
-  while (!done && rclcpp::ok())
-  {
-    // Send the drive command
+    // Stop the robot
+    base_cmd.linear.x = 0;
     cmd_vel_pub_->publish(base_cmd);
-    rate.sleep();
+    
+    return done;
+  }
 
-    // Get the current transform
-    geometry_msgs::msg::TransformStamped current_transform;
+bool turnOdom(bool clockwise, double degrees)
+  {
+    // Convert degrees to radians
+    double radians = degrees * M_PI / 180.0;
+
+    while (radians < 0)
+      radians += 2 * M_PI;
+    while (radians > 2 * M_PI)
+      radians -= 2 * M_PI;
+
+    // Wait for the listener to get the first message
+    geometry_msgs::msg::TransformStamped start_transform;
     try
     {
-      current_transform = tf_buffer_->lookupTransform("base_footprint", "odom", tf2::TimePointZero);
+      start_transform = tf_buffer_->lookupTransform("base_footprint", "odom", tf2::TimePointZero, tf2::durationFromSec(1.0));
     }
     catch (tf2::TransformException &ex)
     {
       RCLCPP_ERROR(this->get_logger(), "%s", ex.what());
-      break;
+      return false;
     }
 
-    // See how far we've turned
-    tf2::Transform start, current;
-    tf2::fromMsg(start_transform.transform, start);
-    tf2::fromMsg(current_transform.transform, current);
+    // Initialize the base command
+    geometry_msgs::msg::Twist base_cmd;
+    base_cmd.linear.x = base_cmd.linear.y = 0.0;
 
-    tf2::Transform relative_transform = start.inverse() * current;
-    tf2::Vector3 actual_turn_axis = relative_transform.getRotation().getAxis();
-    double angle_turned = relative_transform.getRotation().getAngle();
-    if (fabs(angle_turned) < 1.0e-2)
-      continue;
+    rclcpp::Rate rate(10.0);
+    bool done = false;
+    while (!done && rclcpp::ok())
+    {
+      // Get the current transform
+      geometry_msgs::msg::TransformStamped current_transform;
+      try
+      {
+        current_transform = tf_buffer_->lookupTransform("base_footprint", "odom", tf2::TimePointZero);
+      }
+      catch (tf2::TransformException &ex)
+      {
+        RCLCPP_ERROR(this->get_logger(), "%s", ex.what());
+        break;
+      }
 
-    if (actual_turn_axis.dot(desired_turn_axis) < 0)
-      angle_turned = 2 * M_PI - angle_turned;
+      // Calculate the angle turned
+      tf2::Transform start, current;
+      tf2::fromMsg(start_transform.transform, start);
+      tf2::fromMsg(current_transform.transform, current);
 
-    if (angle_turned > radians)
-      done = true;
+      tf2::Transform relative_transform = start.inverse() * current;
+      tf2::Vector3 actual_turn_axis = relative_transform.getRotation().getAxis();
+      double angle_turned = relative_transform.getRotation().getAngle();
+      if (fabs(angle_turned) < 1.0e-2)
+        continue;
+
+      if (actual_turn_axis.dot(clockwise ? -tf2::Vector3(0, 0, 1) : tf2::Vector3(0, 0, 1)) < 0)
+        angle_turned = 2 * M_PI - angle_turned;
+
+      // Calculate the error
+      double error = radians - angle_turned;
+
+      // Proportional control: adjust angular velocity based on the error
+      base_cmd.angular.z = Kp_angular * error * (clockwise ? -1 : 1);
+
+      // Send the turn command
+      cmd_vel_pub_->publish(base_cmd);
+
+      // Check if the goal is reached
+      if (fabs(error) < 0.01) // Threshold to stop
+        done = true;
+
+      rate.sleep();
+    }
+
+    // Stop the robot
+    base_cmd.angular.z = 0;
+    cmd_vel_pub_->publish(base_cmd);
+
+    return done;
   }
-  if (done)
-    return true;
-  return false;
-}
 };
 
 int main(int argc, char **argv)
