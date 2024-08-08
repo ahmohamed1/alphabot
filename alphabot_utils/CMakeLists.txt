@@ -19,6 +19,8 @@ find_package(visualization_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 
+pkg_check_modules(SERIAL libserial)
+
 # find_package(cv_bridge REQUIRED)
 # find_package(OpenCV REQUIRED)
 
@@ -35,6 +37,13 @@ ament_target_dependencies(safety_stop rclcpp std_msgs sensor_msgs geometry_msgs 
 add_executable(robot_drive src/robot_drive.cpp)
 ament_target_dependencies(robot_drive rclcpp std_msgs sensor_msgs geometry_msgs tf2_ros tf2_geometry_msgs)
 
+add_executable(imu_publisher src/imu_publisher.cpp)
+ament_target_dependencies(imu_publisher rclcpp std_msgs sensor_msgs)
+target_include_directories(imu_publisher PUBLIC
+ "${SERIAL_INCLUDE_DIRS}")
+ target_link_libraries(imu_publisher
+ "${SERIAL_LDFLAGS}")
+
 # add_executable(tack_robot_position src/tack_robot_position.cpp)
 # ament_target_dependencies(tack_robot_position rclcpp std_msgs sensor_msgs cv_bridge)
 
@@ -48,6 +57,7 @@ ament_python_install_package(${PROJECT_NAME})
 install(TARGETS
   safety_stop
   robot_drive
+  imu_publisher
   # tack_robot_position
   DESTINATION lib/${PROJECT_NAME}
 )

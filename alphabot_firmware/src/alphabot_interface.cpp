@@ -164,17 +164,33 @@ hardware_interface::return_type AlphabotInterface::read(const rclcpp::Time &,
   {
     std::string message;
     arduino_.ReadLine(message);
-    std::stringstream ss(message);
-    std::string res;
+    // std::stringstream ss(message);
+    // std::string res;
     
-    std::string delimiter = ",";
-    size_t del_pos = message.find(delimiter);
-    std::string token_1 = message.substr(0, del_pos);
-    std::string token_2 = message.substr(del_pos + delimiter.length());
+    // std::string delimiter = ",";
+    // size_t del_pos = message.find(delimiter);
+    // std::string token_1 = message.substr(0, del_pos);
+    // std::string token_2 = message.substr(del_pos + delimiter.length());
 
-    tick_left = std::atof(token_1.c_str());
-    tick_right = std::atof(token_2.c_str());
+    // tick_left = std::atof(token_1.c_str());
+    // tick_right = std::atof(token_2.c_str());
 
+     // Array to hold the separated readings
+    std::vector<float> readings(8, 0.0);
+
+
+    // Create a stringstream object to parse the data
+    std::stringstream ss(message);
+    std::string token;
+    int i = 0;
+    // Parse the received string, assuming readings are separated by commas
+    while (getline(ss, token, ',') && i < 8) {
+        // Convert the token to a float and store it in the array
+        readings[i] = stof(token);
+        i++;
+    }
+    tick_left = readings[6];
+    tick_right = readings[7];
     //---------------------------------------//
 
     left_current_pos = tick_left * RADIUS_PER_TICK;
