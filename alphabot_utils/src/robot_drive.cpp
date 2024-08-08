@@ -34,7 +34,7 @@ public:
 
     // Declare parameters
     this->declare_parameter("Kp_linear", 0.5);
-    this->declare_parameter("Kp_angular", 0.4);
+    this->declare_parameter("Kp_angular", 0.2);
 
     //Get initial parameter values
     this->get_parameter("Kp_linear", Kp_linear);
@@ -88,7 +88,7 @@ public:
 
       double error = distance - dist_moved;
       base_cmd.linear.x = error*Kp_linear;
-
+      
       // Send the drive command
       cmd_vel_pub_->publish(base_cmd);
 
@@ -167,7 +167,7 @@ bool turnOdom(bool clockwise, double degrees)
 
       // Proportional control: adjust angular velocity based on the error
       base_cmd.angular.z = Kp_angular * error * (clockwise ? -1 : 1);
-
+      std::cout<<"turing speed: "<< base_cmd.angular.z <<std::endl;
       // Send the turn command
       cmd_vel_pub_->publish(base_cmd);
 
@@ -192,8 +192,13 @@ int main(int argc, char **argv)
   rclcpp::init(argc, argv);
 
   auto driver = std::make_shared<RobotDriver>();
-  driver->driveForwardOdom(1.81);
+  driver->driveForwardOdom(1.0);
   // driver->turnOdom(false, 90);
+  // driver->driveForwardOdom(1.0);
+  // driver->turnOdom(false, 90);
+  // driver->driveForwardOdom(1.0);
+  // driver->turnOdom(false, 90);
+  // driver->driveForwardOdom(1.0);
   rclcpp::shutdown();
   return 0;
 }

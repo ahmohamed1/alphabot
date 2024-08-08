@@ -65,6 +65,11 @@ private:
   // cm traveled each gear tick
   const double DIST_PER_TICK = (WHEEL_DIAMETER * M_PI) / TICK_PER_REVOLUTION;
 
+  double vRFilt = 0;
+  double vRPrev = 0;
+  double vLFilt = 0;
+  double vLPrev = 0;
+
 };
 }  // namespace Alphabot_firmware
 

@@ -182,11 +182,18 @@ hardware_interface::return_type AlphabotInterface::read(const rclcpp::Time &,
 
     left_velocity = (left_current_pos - left_prevouse_pos) / deltaSeconds;
     right_velocity = (right_current_pos - right_prevouse_pos) / deltaSeconds;
+    
+    // low pass filter (25 Hz cutoff)
+    vLFilt = 0.854*vLFilt + 0.0728* left_velocity + 0.0728*vLPrev;
+    vLPrev = vLFilt;
+    vRFilt = 0.854*vRFilt + 0.0728* right_velocity + 0.0728*vRPrev;
+    vRPrev = vRFilt;
+
 
     position_states_[0] = left_current_pos;
     position_states_[1] = right_current_pos;
-    velocity_states_[0] = left_velocity;
-    velocity_states_[0] = right_velocity;
+    velocity_states_[0] = vLFilt;
+    velocity_states_[1] = vRFilt;
 
     left_prevouse_pos = left_current_pos;
     right_prevouse_pos = right_current_pos;
