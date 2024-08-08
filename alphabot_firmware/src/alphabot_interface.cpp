@@ -209,13 +209,13 @@ hardware_interface::return_type AlphabotInterface::write(const rclcpp::Time &,
                                                           const rclcpp::Duration &)
 {
 // Implement communication protocol with the Arduino
-  double left_rpm = velocity_commands_[0];// * CONVERT_TO_RPM_FACTOR;
-  double right_rpm = velocity_commands_[1];// * CONVERT_TO_RPM_FACTOR;
+  double left_rpm = velocity_commands_[1] / WHEEL_DIAMETER;// * CONVERT_TO_RPM_FACTOR;
+  double right_rpm = velocity_commands_[0] / WHEEL_DIAMETER;// * CONVERT_TO_RPM_FACTOR;
 
   std::stringstream message_stream;
   message_stream << std::fixed << std::setprecision(2) << 
-  "r" << left_rpm << 
-  ",l"  << right_rpm << ",\n";
+  "r" << right_rpm << 
+  ",l"  << left_rpm << ",\n";
   
   try
   {
