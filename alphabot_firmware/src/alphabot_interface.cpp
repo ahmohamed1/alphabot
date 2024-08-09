@@ -27,6 +27,11 @@ AlphabotInterface::~AlphabotInterface()
 }
 
 
+// CallbackReturn AlphabotInterface::on_configure(const hardware_interface::HardwareInfo & info)
+// {
+//   return CallbackReturn::SUCCESS;
+// }
+
 CallbackReturn AlphabotInterface::on_init(const hardware_interface::HardwareInfo &hardware_info)
 {
     CallbackReturn result = hardware_interface::SystemInterface::on_init(hardware_info);
@@ -65,6 +70,20 @@ std::vector<hardware_interface::StateInterface> AlphabotInterface::export_state_
     state_interfaces.emplace_back(hardware_interface::StateInterface(
         info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_states_[i]));
   }
+  // state_interfaces.emplace_back(hardware_interface::StateInterface(info_.joints[0].name, hardware_interface::HW_IF_POSITION, &position_states_[0]));
+  // state_interfaces.emplace_back(hardware_interface::StateInterface(info_.joints[0].name, hardware_interface::HW_IF_VELOCITY, &velocity_states_[0]));
+  // state_interfaces.emplace_back(hardware_interface::StateInterface(info_.joints[1].name, hardware_interface::HW_IF_POSITION, &position_states_[1]));
+  // state_interfaces.emplace_back(hardware_interface::StateInterface(info_.joints[1].name, hardware_interface::HW_IF_VELOCITY, &velocity_states_[1]));
+  // state_interfaces.emplace_back(hardware_interface::StateInterface("orientation_x", hardware_interface::HW_IF_POSITION,    &imu_data.orientation_x));
+  // state_interfaces.emplace_back(hardware_interface::StateInterface("orientation_y", hardware_interface::HW_IF_POSITION,    &imu_data.orientation_y));
+  // state_interfaces.emplace_back(hardware_interface::StateInterface("orientation_z", hardware_interface::HW_IF_POSITION,    &imu_data.orientation_z));
+  // state_interfaces.emplace_back(hardware_interface::StateInterface("orientation_w", hardware_interface::HW_IF_POSITION,    &imu_data.orientation_w));
+  // state_interfaces.emplace_back(hardware_interface::StateInterface("angular_velocity_x", hardware_interface::HW_IF_VELOCITY,    &imu_data.angular_velocity_x));
+  // state_interfaces.emplace_back(hardware_interface::StateInterface("angular_velocity_y", hardware_interface::HW_IF_VELOCITY,    &imu_data.angular_velocity_y));
+  // state_interfaces.emplace_back(hardware_interface::StateInterface("angular_velocity_z", hardware_interface::HW_IF_VELOCITY,    &imu_data.angular_velocity_z));
+  // state_interfaces.emplace_back(hardware_interface::StateInterface("linear_acceleration_x", hardware_interface::HW_IF_ACCELERATION, &imu_data.linear_acceleration_x));
+  // state_interfaces.emplace_back(hardware_interface::StateInterface("linear_acceleration_y", hardware_interface::HW_IF_ACCELERATION, &imu_data.linear_acceleration_y));
+  // state_interfaces.emplace_back(hardware_interface::StateInterface("linear_acceleration_z", hardware_interface::HW_IF_ACCELERATION, &imu_data.linear_acceleration_z));
 
   return state_interfaces;
 }
@@ -95,6 +114,18 @@ CallbackReturn AlphabotInterface::on_activate(const rclcpp_lifecycle::State &)
   velocity_commands_ = { 0.0, 0.0 };
   position_states_ = { 0.0, 0.0 };
   velocity_states_ = { 0.0, 0.0 };
+  // imu_data.orientation_x = 0.0;
+  // imu_data.orientation_y = 0.0;
+  // imu_data.orientation_z =0.0;
+  // imu_data.orientation_w =0.0;
+  // imu_data.angular_velocity_x = 0.0;
+  // imu_data.angular_velocity_y = 0.0;
+  // imu_data.angular_velocity_z = 0.0;
+  // imu_data.linear_acceleration_x = 0.0;
+  // imu_data.linear_acceleration_y = 0.0;
+  // imu_data.linear_acceleration_z = 0.0;
+
+
 
   try
   {
@@ -213,7 +244,14 @@ hardware_interface::return_type AlphabotInterface::read(const rclcpp::Time &,
 
     left_prevouse_pos = left_current_pos;
     right_prevouse_pos = right_current_pos;
-    
+
+    // Update IMU data 
+    // imu_data.angular_velocity_x = readings[0];
+    // imu_data.angular_velocity_y = readings[1];
+    // imu_data.angular_velocity_z = readings[2];
+    // imu_data.linear_acceleration_x = readings[3];
+    // imu_data.linear_acceleration_y = readings[4];
+    // imu_data.linear_acceleration_z = readings[5];
   }
 
 

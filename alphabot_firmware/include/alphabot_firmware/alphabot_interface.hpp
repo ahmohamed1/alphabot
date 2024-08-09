@@ -10,9 +10,22 @@
 #include <vector>
 #include <string>
 #include <cmath>
-// #include "alphabot_firmware/base_model.h"
 
 
+
+struct IMU_DATA
+{
+  double orientation_x = 0.0;
+  double orientation_y = 0.0;
+  double orientation_z = 0.0;
+  double orientation_w = 0.0;
+  double angular_velocity_x = 0.0;
+  double angular_velocity_y = 0.0;
+  double angular_velocity_z = 0.0;
+  double linear_acceleration_x = 0.0;
+  double linear_acceleration_y = 0.0;
+  double linear_acceleration_z = 0.0;
+};
 namespace alphabot_firmware
 {
 
@@ -25,6 +38,8 @@ public:
   virtual ~AlphabotInterface();
 
   // Implementing rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface
+  // virtual CallbackReturn on_configure(const hardware_interface::HardwareInfo & info) override;
+
   virtual CallbackReturn on_activate(const rclcpp_lifecycle::State &) override;
   virtual CallbackReturn on_deactivate(const rclcpp_lifecycle::State &) override;
 
@@ -69,6 +84,9 @@ private:
   double vRPrev = 0;
   double vLFilt = 0;
   double vLPrev = 0;
+
+  // IMU data 
+  // IMU_DATA imu_data;
 
 };
 }  // namespace Alphabot_firmware
