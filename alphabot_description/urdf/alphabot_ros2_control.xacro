@@ -22,7 +22,7 @@
                 <!-- <param name="port">/dev/pico</param> -->
 
                 <!-- MPU6050 sensor--> 
-                <sensor name='imu_link'>
+                <!-- <sensor name='imu_link'>
                     <state_interface name='orientation_x'/>
                     <state_interface name='orientation_y'/>
                     <state_interface name='orientation_z'/>
@@ -33,8 +33,30 @@
                     <state_interface name='linear_acceleration_x'/>
                     <state_interface name='linear_acceleration_y'/>
                     <state_interface name='linear_acceleration_z'/>  
-                </sensor>
+                </sensor> -->
             </hardware>
+
+             <!-- MPU6050 sensor--> 
+            <ros2_control name='MPU6050' type='sensor'>
+            <hardware>
+                <plugin>alphabot_mpu6050/MPU6050Hardware</plugin>
+                <param name='sensor_name'>mpu6050</param>
+                <param name='frame_id'>imu_link</param>
+            </hardware>
+            <sensor name='mpu6050'>
+                <state_interface name='orientation.x'/>
+                <state_interface name='orientation.y'/>
+                <state_interface name='orientation.z'/>
+                <state_interface name='orientation.w'/>
+                <state_interface name='angular_velocity.x'/>
+                <state_interface name='angular_velocity.y'/>
+                <state_interface name='angular_velocity.z'/>
+                <state_interface name='linear_acceleration.x'/>
+                <state_interface name='linear_acceleration.y'/>
+                <state_interface name='linear_acceleration.z'/>  
+            </sensor>
+            </ros2_control>
+
         </xacro:unless>
         
         <!-- ros2_control Common Interfaces -->
