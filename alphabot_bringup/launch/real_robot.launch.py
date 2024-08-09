@@ -97,7 +97,7 @@ def generate_launch_description():
     #     output="screen",
     #     parameters=[{"use_sim_time": True}],
     #     condition=IfCondition(use_slam),
-    )
+    # )
     return LaunchDescription([
         use_slam_arg,
         hardware_interface,

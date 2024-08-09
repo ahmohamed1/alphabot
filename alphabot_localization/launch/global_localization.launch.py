@@ -27,7 +27,7 @@ def generate_launch_description():
     )
 
     map_path = PathJoinSubstitution(
-        [get_package_share_directory("alphabot_mapping"), "maps", map_name, "map.yaml"]
+        [get_package_share_directory("alphabot_mapping"), "maps", map_name, "flat.yaml"]
     )
 
     nav2_map_server = Node(
