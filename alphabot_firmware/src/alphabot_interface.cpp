@@ -220,8 +220,8 @@ hardware_interface::return_type AlphabotInterface::read(const rclcpp::Time &,
         readings[i] = stof(token);
         i++;
     }
-    tick_left = readings[6];
-    tick_right = readings[7];
+    tick_left = readings[7];
+    tick_right = readings[6];
     //---------------------------------------//
 
     left_current_pos = tick_left * RADIUS_PER_TICK;
