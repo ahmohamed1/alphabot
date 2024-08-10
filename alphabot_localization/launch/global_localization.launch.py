@@ -2,7 +2,7 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 
@@ -27,7 +27,7 @@ def generate_launch_description():
     )
 
     map_path = PathJoinSubstitution(
-        [get_package_share_directory("alphabot_mapping"), "maps", map_name, "flat.yaml"]
+        [get_package_share_directory("alphabot_mapping"), "maps", map_name, "map.yaml"]
     )
 
     nav2_map_server = Node(
@@ -62,6 +62,17 @@ def generate_launch_description():
         ],
     )
 
+    nav2_navigator = IncludeLaunchDescription(
+        os.path.join(
+            get_package_share_directory("nav2_bringup"),
+            "launch",
+            "navigation_launch.py",
+        ),
+        launch_arguments={
+            "use_sim_time": use_sim_time,
+        }.items(),
+    )
+
     return LaunchDescription(
         [
             map_name_arg,
@@ -70,5 +81,6 @@ def generate_launch_description():
             nav2_map_server,
             nav2_amcl,
             nav2_lifecycle_manager,
+            nav2_navigator,
         ]
     )
