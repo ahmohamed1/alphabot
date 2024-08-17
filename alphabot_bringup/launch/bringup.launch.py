@@ -53,7 +53,7 @@ def generate_launch_description():
         output="screen",
         parameters=[
             os.path.join(alphabot_controller_package, "config/ekf.yaml"),
-            {"use_sim_time": "false"},
+            {"use_sim_time": false},
         ],
     )
 
@@ -63,6 +63,6 @@ def generate_launch_description():
             controller,
             scanner,
             twist_mux_launch,
-            robot_localization_node,
+            # robot_localization_node,
         ]
     )
