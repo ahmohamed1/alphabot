@@ -2,11 +2,12 @@
 
 import sys
 from PyQt5.QtGui import QPainter
-from PyQt5.QtCore import Qt, QPointF, QRectF, QLineF
+from PyQt5.QtCore import Qt, QPointF, QRectF, QLineF, QMetaObject, Q_ARG
 from PyQt5.QtWidgets import QWidget, QMainWindow, QApplication, QGridLayout, QStyleFactory, QSlider, QLabel
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
+from nav_msgs.msg import Odometry
 
 class Joystick(QWidget):
     def __init__(self, parent=None, main_window=None):
@@ -42,8 +43,8 @@ class Joystick(QWidget):
         if not self.grabCenter:
             return (0, 0)
         normVector = QLineF(self._center(), self.movingOffset)
-        x_value = (normVector.dx() / self.__maxDistance) * self.main_window.rotSpeedSlider.value()
-        y_value = (normVector.dy() / self.__maxDistance) * self.main_window.fwSpeedSlider.value()
+        x_value = ((normVector.dx() / self.__maxDistance) * (self.main_window.rotSpeedSlider.value() / 10)) * -1
+        y_value = ((normVector.dy() / self.__maxDistance) * (self.main_window.fwSpeedSlider.value() / 10)) * -1
 
         return (x_value, y_value)
 
@@ -61,16 +62,15 @@ class Joystick(QWidget):
         if self.grabCenter:
             self.movingOffset = self._boundJoystick(event.pos())
             self.update()
-        self.main_window.update_twist_msg(self.joystickPosition())
+            self.main_window.update_twist_msg(self.joystickPosition())
 
 class MainWindow(QMainWindow):
     def __init__(self, node):
         super().__init__()
-        self.setWindowTitle('Simple uNav Console')
-
+        self.setWindowTitle('Virtual joystick')
         self.node = node
         self.twist_pub = self.node.create_publisher(Twist, '/cmd_vel_joy', 10)
-        self.twist_sub = self.node.create_subscription(Twist, '/joint_stats', self.joint_stats_callback, 10)
+        self.twist_sub = self.node.create_subscription(Odometry, '/alphabot_controller/odom', self.joint_stats_callback, 10)
 
         # Create main widget container
         cw = QWidget()
@@ -83,8 +83,8 @@ class MainWindow(QMainWindow):
         # Speed sliders
         self.fwSpeedSlider = QSlider(Qt.Vertical)
         self.fwSpeedSlider.setMinimum(0)
-        self.fwSpeedSlider.setMaximum(5)
-        self.fwSpeedSlider.setValue(1)
+        self.fwSpeedSlider.setMaximum(20)
+        self.fwSpeedSlider.setValue(10)
         layout.addWidget(self.fwSpeedSlider, 1, 0)
 
         self.fwSpeedLabel = QLabel("Fw speed max\n(m/sec)")
@@ -95,15 +95,12 @@ class MainWindow(QMainWindow):
 
         self.rotSpeedSlider = QSlider(Qt.Vertical)
         self.rotSpeedSlider.setMinimum(0)
-        self.rotSpeedSlider.setMaximum(5)
-        self.rotSpeedSlider.setValue(1)
+        self.rotSpeedSlider.setMaximum(20)
+        self.rotSpeedSlider.setValue(10)
         layout.addWidget(self.rotSpeedSlider, 1, 1)
 
         self.rotSpeedLabel = QLabel("Rot speed max\n(deg/sec)")
         layout.addWidget(self.rotSpeedLabel, 2, 1)
-
-        self.rotSpeedValueLabel = QLabel("180")
-        layout.addWidget(self.rotSpeedValueLabel, 3, 1)
 
         # Joystick widget
         self.joystick = Joystick(self, self)
@@ -126,13 +123,14 @@ class MainWindow(QMainWindow):
 
     def update_twist_msg(self, position):
         twist = Twist()
-        twist.linear.x = position[1]
+        twist.linear.x = -position[1]
         twist.angular.z = position[0]
         self.twist_pub.publish(twist)
 
     def joint_stats_callback(self, msg):
-        self.fwSpeedDisplayValue.setText(str(msg.linear.x))
-        self.rotSpeedDisplayValue.setText(str(msg.angular.z))
+        self.get_logger().info(f"Received odom message: linear.x = {msg.twist.twist.linear.x}, angular.z = {msg.twist.twist.angular.z}")
+        QMetaObject.invokeMethod(self.fwSpeedDisplayValue, "setText", Q_ARG(str, str(msg.twist.twist.linear.x)))
+        QMetaObject.invokeMethod(self.rotSpeedDisplayValue, "setText", Q_ARG(str, str(msg.twist.twist.angular.z)))
 
 def main(args=None):
     rclpy.init(args=args)

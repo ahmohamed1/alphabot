@@ -1,4 +1,4 @@
-image: flat.pgm
+image: map.pgm
 mode: trinary
 resolution: 0.05
 origin: [-1.89, -13.3, 0]

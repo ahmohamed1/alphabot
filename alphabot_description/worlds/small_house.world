@@ -840,11 +840,11 @@
       <direction>0 0 -1</direction>
     </light>
 
-    <include>
+    <!-- <include>
       <uri>model://charging_dock</uri>
       <static>true</static>
       <pose>3.22 -5.28 0.0 0 0 1.57</pose>
-    </include>
+    </include> -->
 
   </world>
 </sdf>

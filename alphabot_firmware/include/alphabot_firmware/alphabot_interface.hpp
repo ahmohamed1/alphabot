@@ -76,7 +76,7 @@ private:
   double CONVERT_TO_RPM_FACTOR = 60/(M_PI*WHEEL_DIAMETER);
   double left_velocity = 0;
   double right_velocity = 0;
-
+  rclcpp::Time last_run_;
   // cm traveled each gear tick
   const double DIST_PER_TICK = (WHEEL_DIAMETER * M_PI) / TICK_PER_REVOLUTION;
 
@@ -84,6 +84,7 @@ private:
   double vRPrev = 0;
   double vLFilt = 0;
   double vLPrev = 0;
+  
 
   // IMU data 
   // IMU_DATA imu_data;
