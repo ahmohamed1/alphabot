@@ -30,6 +30,11 @@ pkg_check_modules(SERIAL libserial)
 #   ${OpenCV_INCLUDE_DIRS}
 # )
 
+install(
+  DIRECTORY launch config
+  DESTINATION share/${PROJECT_NAME}
+)
+
 
 add_executable(safety_stop src/safety_stop.cpp)
 ament_target_dependencies(safety_stop rclcpp std_msgs sensor_msgs geometry_msgs twist_mux_msgs rclcpp_action visualization_msgs)
@@ -39,6 +44,11 @@ ament_target_dependencies(robot_drive rclcpp std_msgs sensor_msgs geometry_msgs 
 
 add_executable(imu_publisher src/imu_publisher.cpp)
 ament_target_dependencies(imu_publisher rclcpp std_msgs sensor_msgs)
+
+
+add_executable(follow_wall src/follow_wall.cpp)
+ament_target_dependencies(follow_wall rclcpp geometry_msgs sensor_msgs)
+
 target_include_directories(imu_publisher PUBLIC
  "${SERIAL_INCLUDE_DIRS}")
  target_link_libraries(imu_publisher
@@ -58,6 +68,7 @@ install(TARGETS
   safety_stop
   robot_drive
   imu_publisher
+  follow_wall
   # tack_robot_position
   DESTINATION lib/${PROJECT_NAME}
 )

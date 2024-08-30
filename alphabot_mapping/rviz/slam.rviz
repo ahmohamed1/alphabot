@@ -131,8 +131,6 @@ Visualization Manager:
           Value: true
         laser_link:
           Value: true
-        map:
-          Value: true
         odom:
           Value: true
         wheel_left_link:
@@ -145,22 +143,21 @@ Visualization Manager:
       Show Axes: true
       Show Names: true
       Tree:
-        map:
-          odom:
-            base_footprint:
-              base_link:
-                caster_front_link:
-                  {}
-                caster_rear_link:
-                  {}
-                imu_link:
-                  {}
-                laser_link:
-                  {}
-                wheel_left_link:
-                  {}
-                wheel_right_link:
-                  {}
+        odom:
+          base_footprint:
+            base_link:
+              caster_front_link:
+                {}
+              caster_rear_link:
+                {}
+              imu_link:
+                {}
+              laser_link:
+                {}
+              wheel_left_link:
+                {}
+              wheel_right_link:
+                {}
       Update Interval: 0
       Value: true
     - Alpha: 1
@@ -178,9 +175,9 @@ Visualization Manager:
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 911
+      Max Intensity: 0
       Min Color: 0; 0; 0
-      Min Intensity: 6
+      Min Intensity: 0
       Name: LaserScan
       Position Transformer: XYZ
       Selectable: true
@@ -310,7 +307,7 @@ Visualization Manager:
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
-    Fixed Frame: map
+    Fixed Frame: base_footprint
     Frame Rate: 30
   Name: root
   Tools:
@@ -353,16 +350,16 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 28.303218841552734
+      Distance: 31.69960594177246
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 5.690563201904297
-        Y: -2.8709464073181152
-        Z: -0.005672365427017212
+        X: 0.1874293088912964
+        Y: -1.5153239965438843
+        Z: -0.00014368809934239835
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
@@ -391,5 +388,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1318
-  X: -35
-  Y: -30
+  X: 253
+  Y: -32

@@ -1,0 +1,9 @@
+angle: 45.0
+desire_distance: 0.5
+kp: 1.0
+qos_overrides./parameter_events.publisher.depth: 1000
+qos_overrides./parameter_events.publisher.durability: volatile
+qos_overrides./parameter_events.publisher.history: keep_last
+qos_overrides./parameter_events.publisher.reliability: reliable
+use_sim_time: false
+velocity: 0.4
