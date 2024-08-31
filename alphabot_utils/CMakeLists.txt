@@ -49,6 +49,9 @@ ament_target_dependencies(imu_publisher rclcpp std_msgs sensor_msgs)
 add_executable(follow_wall src/follow_wall.cpp)
 ament_target_dependencies(follow_wall rclcpp geometry_msgs sensor_msgs)
 
+add_executable(follow_gap src/follow_gap.cpp)
+ament_target_dependencies(follow_gap rclcpp geometry_msgs sensor_msgs)
+
 target_include_directories(imu_publisher PUBLIC
  "${SERIAL_INCLUDE_DIRS}")
  target_link_libraries(imu_publisher
@@ -69,6 +72,7 @@ install(TARGETS
   robot_drive
   imu_publisher
   follow_wall
+  follow_gap
   # tack_robot_position
   DESTINATION lib/${PROJECT_NAME}
 )

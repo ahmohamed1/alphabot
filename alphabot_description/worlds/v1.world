@@ -1,17 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <sdf version="1.6">
-        <world name="v1">
-
-            <!-- override the default position of the camera !-->
-    <gui>
-      <camera name='gzclient_camera'>
-      <!--
-        <pose>5 -4 2 0 0.2756 2.3561</pose>
-        -->
-        <pose>--30 0.0 23 0 0.624 0</pose>
-      </camera>
-    </gui>
+  <world name="v1">
+        <!-- override the default position of the camera !-->
+        <gui>
+          <camera name='gzclient_camera'>
+          <!--
+            <pose>5 -4 2 0 0.2756 2.3561</pose>
+            -->
+            <pose>-14 -0.27 7.186 0 0.5 0</pose>
+          </camera>
+        </gui>
     
             <include>
             <uri>model://ground_plane</uri>
