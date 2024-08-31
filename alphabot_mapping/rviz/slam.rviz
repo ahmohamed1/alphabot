@@ -131,6 +131,8 @@ Visualization Manager:
           Value: true
         laser_link:
           Value: true
+        map:
+          Value: true
         odom:
           Value: true
         wheel_left_link:
@@ -143,21 +145,24 @@ Visualization Manager:
       Show Axes: true
       Show Names: true
       Tree:
+        base_footprint:
+          base_link:
+            caster_front_link:
+              {}
+            caster_rear_link:
+              {}
+            imu_link:
+              {}
+            laser_link:
+              {}
+            wheel_left_link:
+              {}
+            wheel_right_link:
+              {}
+        map:
+          {}
         odom:
-          base_footprint:
-            base_link:
-              caster_front_link:
-                {}
-              caster_rear_link:
-                {}
-              imu_link:
-                {}
-              laser_link:
-                {}
-              wheel_left_link:
-                {}
-              wheel_right_link:
-                {}
+          {}
       Update Interval: 0
       Value: true
     - Alpha: 1
@@ -304,10 +309,38 @@ Visualization Manager:
         Value: /global_costmap/costmap_updates
       Use Timestamp: false
       Value: true
+    - Alpha: 1
+      Buffer Length: 1
+      Class: rviz_default_plugins/Path
+      Color: 25; 255; 0
+      Enabled: true
+      Head Diameter: 0.30000001192092896
+      Head Length: 0.20000000298023224
+      Length: 0.30000001192092896
+      Line Style: Lines
+      Line Width: 0.029999999329447746
+      Name: Path
+      Offset:
+        X: 0
+        Y: 0
+        Z: 0
+      Pose Color: 255; 85; 255
+      Pose Style: None
+      Radius: 0.029999999329447746
+      Shaft Diameter: 0.10000000149011612
+      Shaft Length: 0.10000000149011612
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /path
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
-    Fixed Frame: base_footprint
+    Fixed Frame: odom
     Frame Rate: 30
   Name: root
   Tools:
@@ -388,5 +421,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1318
-  X: 253
+  X: 1183
   Y: -32

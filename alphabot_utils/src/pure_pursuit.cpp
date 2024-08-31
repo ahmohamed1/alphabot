@@ -2,7 +2,17 @@
 #include "nav_msgs/msg/path.hpp"
 #include "nav_msgs/msg/odometry.hpp"
 #include "geometry_msgs/msg/twist.hpp"
-#include "alphabot_utils/helper.hpp"
+
+
+double to_radians(double theta) {
+    return M_PI * theta / 180.0;
+
+}
+
+double to_degrees(double theta) {
+    return theta * 180.0 / M_PI;
+}
+
 
 
 class PursuitNode : public rclcpp::Node
@@ -12,10 +22,10 @@ public:
     {
         // Subscriber to the path to follow
         path_sub_ = this->create_subscription<nav_msgs::msg::Path>(
-            "path", 10, std::bind(&PursuitNode::pathCallback, this, std::placeholders::_1));
+            "/path", 10, std::bind(&PursuitNode::pathCallback, this, std::placeholders::_1));
         // Subscriber to the current location (odometry)
         odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>(
-            "odom", 10, std::bind(&PursuitNode::odomCallback, this, std::placeholders::_1));
+            "/alphabot_controller/odom", 10, std::bind(&PursuitNode::odomCallback, this, std::placeholders::_1));
         // Publisher for the command (e.g., velocity)
         command_pub_ = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
         // Set the lookahead distance
@@ -29,6 +39,7 @@ private:
     {
         // Store the path
         path_ = msg;
+        // RCLCPP_INFO(this->get_logger(), "Path has been recived");
     }
 
     void odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
@@ -37,7 +48,7 @@ private:
         current_position_x_ = msg->pose.pose.position.x;
         current_position_y_ = msg->pose.pose.position.y;
         current_heading_ = msg->pose.pose.position.y;
-
+        // RCLCPP_INFO(this->get_logger(), "Position recived");
         // Call the pursuit algorithm
         pursuePath();
     }
@@ -58,9 +69,26 @@ private:
         double alpha = std::atan2((target_pose.position.y - current_position_y_), (target_pose.position.x - current_position_x_));
         double delta = std::atan2(2.0 * WB * std::sin(alpha) / Lf, 1.0);
         command.linear.x = get_velocity(delta);
-        command.angular.z = alpha;
+        command.angular.z = delta;
         // Publish the command
         command_pub_->publish(command);
+    }
+
+    geometry_msgs::msg::Pose find_lookahead_point() {
+        for (const auto& point : path_->poses) {
+            double dx = point.pose.position.x - current_position_x_;
+            double dy = point.pose.position.y - current_position_y_;
+            double distance = std::sqrt(dx * dx + dy * dy);
+            if (distance >= lookahead_distance_) {
+                std::cout << "Lookahead point found: x=" << point.pose.position.x << ", y=" << point.pose.position.y << std::endl;
+                return point.pose;
+            }
+        }
+        RCLCPP_WARN(this->get_logger(), "No lookahead point found within lookahead distance.");
+        geometry_msgs::msg::Pose default_pose;
+        default_pose.position.x = -1.0;
+        default_pose.position.y = -1.0;
+        return default_pose; // or any other suitable default value
     }
 
     geometry_msgs::msg::Pose findLookaheadPoint()
@@ -102,11 +130,11 @@ private:
         double velocity = 0;
 
         if (abs(steering_angle) >= to_radians(0.0) && abs(steering_angle) < to_radians(10.0)) {
-            velocity = 1.2;
-        } else if (abs(steering_angle) >= to_radians(10.0) && abs(steering_angle) <= to_radians(20.0)) {
             velocity = 0.5;
+        } else if (abs(steering_angle) >= to_radians(10.0) && abs(steering_angle) <= to_radians(20.0)) {
+            velocity = 0.25;
         } else {
-            velocity = 0.2;
+            velocity = 0.1;
         }
         return velocity;
     }
@@ -120,9 +148,9 @@ private:
     double current_position_x_ = 0.0;
     double current_position_y_ = 0.0;
     double current_heading_ = 0.0;
-    double lookahead_distance_ = 0.5;
+    double lookahead_distance_ = 0.8;
     double Lf = 0.5;
-    double WB = 0.6;
+    double WB = 0.36;
 
     // this to store the index we visited before
     int visited_index = NULL;

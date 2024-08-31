@@ -18,6 +18,7 @@ find_package(rclcpp_action REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
 
 pkg_check_modules(SERIAL libserial)
 
@@ -52,6 +53,11 @@ ament_target_dependencies(follow_wall rclcpp geometry_msgs sensor_msgs)
 add_executable(follow_gap src/follow_gap.cpp)
 ament_target_dependencies(follow_gap rclcpp geometry_msgs sensor_msgs)
 
+
+add_executable(pure_pursuit src/pure_pursuit.cpp)
+ament_target_dependencies(pure_pursuit rclcpp geometry_msgs sensor_msgs nav_msgs)
+
+
 target_include_directories(imu_publisher PUBLIC
  "${SERIAL_INCLUDE_DIRS}")
  target_link_libraries(imu_publisher
@@ -73,6 +79,7 @@ install(TARGETS
   imu_publisher
   follow_wall
   follow_gap
+  pure_pursuit
   # tack_robot_position
   DESTINATION lib/${PROJECT_NAME}
 )
