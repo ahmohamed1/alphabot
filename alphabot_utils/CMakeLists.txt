@@ -19,6 +19,7 @@ find_package(visualization_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
+find_package(visualization_msgs REQUIRED)
 
 pkg_check_modules(SERIAL libserial)
 
@@ -55,7 +56,7 @@ ament_target_dependencies(follow_gap rclcpp geometry_msgs sensor_msgs)
 
 
 add_executable(pure_pursuit src/pure_pursuit.cpp)
-ament_target_dependencies(pure_pursuit rclcpp geometry_msgs sensor_msgs nav_msgs)
+ament_target_dependencies(pure_pursuit rclcpp geometry_msgs sensor_msgs nav_msgs visualization_msgs tf2_ros)
 
 
 target_include_directories(imu_publisher PUBLIC
