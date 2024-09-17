@@ -38,11 +38,12 @@ class EdgeDetectionNode(Node):
         points = self.polar_to_cartesian(ranges, angle_min, angle_increment)
 
         # Compute derivative and find peaks
-        jumps, point_list = self.compute_derivative(ranges, 0.1)
-        boxes, cylinder_boundaries = self.find_cylinders(ranges, jumps, 100,1)
+        jumps = self.compute_derivative(ranges, 0.1)
+        boxes, cylinder_boundaries, cartesian_boundaries = self.find_cylinders(ranges, jumps, 100,1, angle_min, angle_increment)
         # print(cylinder_boundaries)
         # Update the plot with the result
-        self.plot_edge(points, jumps, ranges, boxes, cylinder_boundaries)
+        # cylinder_boundaries_cart = self.convert_break_points_to_cartesian(ranges, cylinder_boundaries, angle_min, angle_increment)
+        self.plot_edge(points, jumps, ranges, boxes, cylinder_boundaries, cartesian_boundaries)
 
     def calculate_edge_length(self, breaking_points):
         """Calculate the total length of the detected edge."""
@@ -54,9 +55,16 @@ class EdgeDetectionNode(Node):
             total_length += distance
         return total_length
 
-    def find_cylinders(self, scan, scan_derivative, jump, min_dist):
+    def polar_to_cartesian_1(self,angle, distance):
+        """Convert polar coordinates (angle, distance) to Cartesian (x, y)."""
+        x = distance * np.cos(angle)
+        y = distance * np.sin(angle)
+        return x, y
+
+    def find_cylinders(self, scan, scan_derivative, jump, min_dist, angle_min, angle_increment):
         cylinder_list = []
         cylinder_boundaries = []
+        cartesian_boundaries = []
         on_cylinder = False
         sum_ray, sum_depth, rays = 0.0, 0.0, 0
         start_index = None  # To track the start point of a cylinder
@@ -73,8 +81,16 @@ class EdgeDetectionNode(Node):
             # End of a cylinder (positive jump)
             elif scan_derivative[i] > jump and rays > 0:
                 cylinder_list.append((sum_ray / rays, sum_depth / rays))
-                cylinder_boundaries.append((start_index,0))  # Record start and end indices
-                cylinder_boundaries.append((i,0))  # Record start and end indices
+                cylinder_boundaries.append((start_index, i))  # Record start and end indices
+                
+                # Convert boundaries to Cartesian
+                start_angle = angle_min + start_index * angle_increment
+                end_angle = angle_min + i * angle_increment
+                start_cartesian = self.polar_to_cartesian_1(start_angle, scan[start_index])
+                end_cartesian = self.polar_to_cartesian_1(end_angle, scan[i])
+                cartesian_boundaries.append(start_cartesian)
+                cartesian_boundaries.append(end_cartesian)
+                
                 sum_ray, sum_depth, rays = 0.0, 0.0, 0
                 on_cylinder = False
 
@@ -84,11 +100,10 @@ class EdgeDetectionNode(Node):
                 sum_depth += scan[i]
                 rays += 1
 
-        return np.array(cylinder_list), np.array(cylinder_boundaries)
+        return np.array(cylinder_list), cylinder_boundaries, cartesian_boundaries
 
     def compute_derivative(self, scan, min_dist):
         jumps = [0]
-        index_list = []
         for i in range(1, len(scan) - 1):
             l = scan[i-1]
             r = scan[i+1]
@@ -99,13 +114,10 @@ class EdgeDetectionNode(Node):
             if (l > min_dist) and (r > min_dist):
                 derivative = ((r - l) / 2.0)*100
                 jumps.append((derivative))
-                if abs(derivative) > 100:
-                    index_list.append((i,0))
             else:
                 jumps.append(0)
         jumps.append(0)
-        index_list = index_list[1:-1]
-        return jumps, np.array(index_list)
+        return jumps
 
 
     def filter_data(self, ranges, range_max):
@@ -120,6 +132,17 @@ class EdgeDetectionNode(Node):
         y = ranges * np.sin(angles)
         return np.vstack((x, y)).T
 
+    def convert_break_points_to_cartesian(self, ranges, break_points, angle_min, angle_increment):
+        list_points = []
+        for point in break_points:
+            for i in range(len(point)):
+                index = point[i]
+                depth  = ranges[index]
+                # print(index, depth)
+                x_1,y_1 = self.polar_to_cartesian_from_index(depth, index, angle_min, angle_increment)
+                list_points.append((x_1,y_1))
+
+        return list_points
     def polar_to_cartesian_from_index(self, r, index, angle_min, angle_increment):
         # Calculate the angle (theta) based on index, angle_min, and angle_increment
         theta = angle_min + index * angle_increment
@@ -129,7 +152,7 @@ class EdgeDetectionNode(Node):
         y = r * np.sin(theta)
         return x, y
 
-    def plot_edge(self, points, jumps, scan, breaking_points, start_finish_point):
+    def plot_edge(self, points, jumps, scan, center_points, start_finish_point, start_finish_point_cart):
         """Update the plot with the entire scan data and highlight the detected edge."""
         # print(points)
         self.axs[0].clear()
@@ -139,16 +162,21 @@ class EdgeDetectionNode(Node):
         x = np.append(x,0)
         y = np.append(y,0)
         self.axs[0].plot(x, y, 'b.', label="Scan Points")
+        self.axs[0].plot(start_finish_point_cart, 'r*', label="Start Finish Point")
 
-        x, y = breaking_points[:, 0], breaking_points[:, 1]
+        temp_ = np.array(center_points)
+        x, y = temp_[:, 0], temp_[:, 1]
         x = np.append(x,0)
         y = np.append(y,0)
         self.axs[1].plot(x, y, 'r*', label="center object")
-
-        x, y = start_finish_point[:, 0], start_finish_point[:, 1]
-        x = np.append(x,0)
-        y = np.append(y,0)
-        self.axs[1].plot(x, y, 'y*', label="Start Finish Point")
+        x_sf = []
+        y_sf = []
+        for point in start_finish_point:
+            x_sf.append(point[0])
+            x_sf.append(point[1])
+            y_sf.append(0)
+            y_sf.append(0)
+        self.axs[1].plot(x_sf, y_sf, 'y*', label="Start Finish Point")
 
         self.axs[1].plot(jumps, label="Jumps")
         self.axs[1].plot(scan, 'g-' ,label="ranges")
