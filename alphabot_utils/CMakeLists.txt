@@ -89,6 +89,7 @@ install(TARGETS
 install(PROGRAMS
   ${PROJECT_NAME}/safety_stop.py
   ${PROJECT_NAME}/virtual_joystick.py
+  ${PROJECT_NAME}/detect_edge.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
