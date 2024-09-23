@@ -5,6 +5,8 @@ from rclpy.node import Node
 from sensor_msgs.msg import LaserScan
 import numpy as np
 import matplotlib.pyplot as plt
+import cv2
+import math
 
 from scipy.ndimage import gaussian_filter
 
@@ -23,6 +25,28 @@ class EdgeDetectionNode(Node):
         self.fig, self.axs = plt.subplots(2)
         self.fig.show()
         self.fig.canvas.draw()
+    # Function to calculate the slope between two points
+    def calculate_slope(self, p1, p2):
+        return np.arctan2(p2[1] - p1[1], p2[0] - p1[0])
+
+    # Function to detect corners based on angle changes
+    def detect_corners(self, points, angle_threshold=np.pi/6):
+        points_ = points[~np.isnan(points).any(axis=1)]
+        corners = []
+        start_point = points_[0]
+        end_point = points_[-1]
+        
+        # Compute slopes between consecutive points
+        slopes = [self.calculate_slope(points_[i], points_[i+1]) for i in range(len(points_)-1)]
+        
+        # Detect significant changes in slope
+        for i in range(2, len(slopes)):
+            angle_change = abs(slopes[i] - slopes[i-1])
+            print("Slop: ", angle_change)
+            if angle_change > angle_threshold:  # Significant change in angle
+                corners.append(points_[i])
+        
+        return start_point, corners, end_point
 
     def scan_callback(self, msg):
         # Extract laser scan data
@@ -30,30 +54,45 @@ class EdgeDetectionNode(Node):
         angle_min = msg.angle_min
         angle_max = msg.angle_max
         angle_increment = msg.angle_increment
-
         # Filter out invalid or noisy data
+        # print(ranges)
         ranges = self.filter_data(ranges, 3.5)
         ranges = gaussian_filter(ranges, sigma=1)
         # Convert polar coordinates to Cartesian
         points = self.polar_to_cartesian(ranges, angle_min, angle_increment)
+        # print(f"Length range and list: {len(ranges), len(points)}")
 
         # Compute derivative and find peaks
         jumps = self.compute_derivative(ranges, 0.1)
         boxes, cylinder_boundaries, cartesian_boundaries = self.find_cylinders(ranges, jumps, 100,1, angle_min, angle_increment)
-        # print(cylinder_boundaries)
+        # print("boundry", cylinder_boundaries)
+        start = points[cylinder_boundaries[0][0]+1]
+        end = points[cylinder_boundaries[0][1]]
+        print(f"Length: {self.calculate_edge_length(start, end)}")
+        start_end_points = [start, end]
         # Update the plot with the result
         # cylinder_boundaries_cart = self.convert_break_points_to_cartesian(ranges, cylinder_boundaries, angle_min, angle_increment)
-        self.plot_edge(points, jumps, ranges, boxes, cylinder_boundaries, cartesian_boundaries)
+        self.plot_edge(points, jumps, ranges, boxes, cylinder_boundaries, start_end_points)
 
-    def calculate_edge_length(self, breaking_points):
+
+    def plote_points_to_image(self,points):
+        image = np.full((500, 500, 3), 255, dtype = np.uint8)   
+        points_temp_ = points*100
+        for i in range(len(points_temp_)-1):
+            point_1 = points_temp_[i]
+            point_2 = points_temp_[i+1]
+            if ~np.isnan(point_1[0]) and ~np.isnan(point_2[0]):
+                # print(point_1[i][0]+250,point_1[i][1])
+                cv2.line(image, (int(point_1[0])+250,int(point_1[1])), (int(point_2[0])+250,int(point_2[1])),(0,0,0), 1)
+                # cv2.circle(image,(int(point[0])+250,int(point[1])),1,(0,0,0),-1)
+
+        cv2.imshow("output",image)
+        cv2.waitKey(5)
+
+    def calculate_edge_length(self, p1, p2):
         """Calculate the total length of the detected edge."""
-        total_length = 0.0
-        for i in range(1, len(breaking_points)):
-            p1 = np.array(breaking_points[i - 1])
-            p2 = np.array(breaking_points[i])
-            distance = np.linalg.norm(p2 - p1)  # Euclidean distance
-            total_length += distance
-        return total_length
+        distance = np.linalg.norm(p2 - p1)  # Euclidean distance
+        return distance
 
     def polar_to_cartesian_1(self,angle, distance):
         """Convert polar coordinates (angle, distance) to Cartesian (x, y)."""
@@ -162,7 +201,9 @@ class EdgeDetectionNode(Node):
         x = np.append(x,0)
         y = np.append(y,0)
         self.axs[0].plot(x, y, 'b.', label="Scan Points")
-        self.axs[0].plot(start_finish_point_cart, 'r*', label="Start Finish Point")
+        temp_ = np.array(start_finish_point_cart)
+        x, y = temp_[:, 0], temp_[:, 1]
+        self.axs[0].plot(x,y, 'r-', label="Start Finish Point")
 
         temp_ = np.array(center_points)
         x, y = temp_[:, 0], temp_[:, 1]
