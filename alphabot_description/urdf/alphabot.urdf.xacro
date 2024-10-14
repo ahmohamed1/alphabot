@@ -6,7 +6,7 @@
 
     <xacro:include filename="$(find alphabot_description)/urdf/alphabot_gazebo.xacro"/> 
     <xacro:include filename="$(find alphabot_description)/urdf/alphabot_ros2_control.xacro"/>  
-    
+    <xacro:include filename="$(find alphabot_description)/urdf/depth_camera.xacro" />
 
     <xacro:property name="wheel_radius" value="0.034" />
     <xacro:property name="wheel_width" value="0.012" />
