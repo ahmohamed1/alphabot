@@ -199,10 +199,10 @@ hardware_interface::return_type AlphabotInterface::read(const rclcpp::Time &,
     {
       values.push_back(std::stod(res));
     }
-    velocity_states_.at(0) = values[0];
+    velocity_states_.at(0) = values[1];
     position_states_.at(0) += velocity_states_.at(0) * dt;
 
-    velocity_states_.at(1) =values[1];
+    velocity_states_.at(1) =values[0];
     position_states_.at(1) += velocity_states_.at(1) * dt;
 
     last_run_ = rclcpp::Clock().now();
@@ -220,7 +220,7 @@ hardware_interface::return_type AlphabotInterface::write(const rclcpp::Time &,
 // Implement communication protocol with the Arduino
   std::stringstream message_stream;
   
-  
+  // left == 0 and right == 1
   message_stream  << "v" << velocity_commands_.at(1) << "," <<velocity_commands_.at(0) << "\n";
   // RCLCPP_ERROR_STREAM(rclcpp::get_logger("AlphabotInterface"),message_stream.str() );
                             
