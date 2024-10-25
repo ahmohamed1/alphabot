@@ -54,6 +54,10 @@ install(
   DESTINATION share/${PROJECT_NAME}
 )
 
+install(PROGRAMS
+  ${PROJECT_NAME}/mpu6050_driver.py
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 ament_export_include_directories(
   include

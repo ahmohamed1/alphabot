@@ -190,21 +190,24 @@ hardware_interface::return_type AlphabotInterface::read(const rclcpp::Time &,
     auto dt = (rclcpp::Clock().now() - last_run_).seconds();
     std::string message;
     arduino_.ReadLine(message);
-    // message = message.substr(1);
     std::stringstream ss(message);
     std::string res;
-    std::vector<float> values; 
-    // RCLCPP_ERROR_STREAM(rclcpp::get_logger("AlphabotInterface"),message );
+    int multiplier = 1;
     while(std::getline(ss, res, ','))
     {
-      values.push_back(std::stod(res));
+      multiplier = res.at(1) == 'p' ? 1 : -1;
+
+      if(res.at(0) == 'r')
+      {
+        velocity_states_.at(0) = multiplier * std::stod(res.substr(2, res.size()));
+        position_states_.at(0) += velocity_states_.at(0) * dt;
+      }
+      else if(res.at(0) == 'l')
+      {
+        velocity_states_.at(1) = multiplier * std::stod(res.substr(2, res.size()));
+        position_states_.at(1) += velocity_states_.at(1) * dt;
+      }
     }
-    velocity_states_.at(0) = values[1];
-    position_states_.at(0) += velocity_states_.at(0) * dt;
-
-    velocity_states_.at(1) =values[0];
-    position_states_.at(1) += velocity_states_.at(1) * dt;
-
     last_run_ = rclcpp::Clock().now();
   }
 
@@ -219,11 +222,31 @@ hardware_interface::return_type AlphabotInterface::write(const rclcpp::Time &,
 {
 // Implement communication protocol with the Arduino
   std::stringstream message_stream;
+  char right_wheel_sign = velocity_commands_.at(0) >= 0 ? 'p' : 'n';
+  char left_wheel_sign = velocity_commands_.at(1) >= 0 ? 'p' : 'n';
+  std::string compensate_zeros_right = "";
+  std::string compensate_zeros_left = "";
+  if(std::abs(velocity_commands_.at(0)) < 10.0)
+  {
+    compensate_zeros_right = "0";
+  }
+  else
+  {
+    compensate_zeros_right = "";
+  }
+  if(std::abs(velocity_commands_.at(1)) < 10.0)
+  {
+    compensate_zeros_left = "0";
+  }
+  else
+  {
+    compensate_zeros_left = "";
+  }
   
-  // left == 0 and right == 1
-  message_stream  << "v" << velocity_commands_.at(1) << "," <<velocity_commands_.at(0) << "\n";
-  // RCLCPP_ERROR_STREAM(rclcpp::get_logger("AlphabotInterface"),message_stream.str() );
-                            
+  message_stream << std::fixed << std::setprecision(2) << 
+    "r" << right_wheel_sign << compensate_zeros_right << std::abs(velocity_commands_.at(0)) << 
+    ",l" <<  left_wheel_sign << compensate_zeros_left << std::abs(velocity_commands_.at(1)) << ",";
+
   try
   {
     arduino_.Write(message_stream.str());

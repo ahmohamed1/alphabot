@@ -14,7 +14,7 @@ def generate_launch_description():
         os.path.join(
             get_package_share_directory("alphabot_firmware"),
             "launch",
-            "hardware_interface.launch.py",
+            "hardware_interface.launch.py"
         ),
     )
 
@@ -46,6 +46,11 @@ def generate_launch_description():
         }.items(),
     )
 
+    imu_driver_node = Node(
+        package="alphabot_firmware",
+        executable="mpu6050_driver.py"
+    )
+
     robot_localization_node = Node(
         package="robot_localization",
         executable="ekf_node",
@@ -63,6 +68,7 @@ def generate_launch_description():
             controller,
             scanner,
             twist_mux_launch,
+            imu_driver_node,
             # robot_localization_node,
         ]
     )
