@@ -13,13 +13,13 @@ def generate_launch_description():
 
     use_sim_time = LaunchConfiguration("use_sim_time")
     use_sim_time_arg = DeclareLaunchArgument("use_sim_time", default_value="true")
-    alphabot_localization_package = get_package_share_directory("alphabot_localization")
+    alphabot_mapping_package = get_package_share_directory("alphabot_mapping")
     params_file = os.path.join(
-        alphabot_localization_package, "config", "nav_params.yaml"
+        alphabot_mapping_package, "config", "nav_params.yaml"
     )
 
     mapper_params_path = os.path.join(
-        alphabot_localization_package,
+        alphabot_mapping_package,
         "config",
         "mapper_params_online_async.yaml",
     )

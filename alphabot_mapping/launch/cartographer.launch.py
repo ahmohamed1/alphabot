@@ -15,8 +15,8 @@ def generate_launch_description():
 
     ## ***** Nodes *****
     # Define package share directory and config file for Cartographer node
-    alphabot_localization_package = get_package_share_directory("alphabot_localization")
-    cartographer_config_dir = os.path.join(alphabot_localization_package, "config")
+    alphabot_mapping_package = get_package_share_directory("alphabot_mapping")
+    cartographer_config_dir = os.path.join(alphabot_mapping_package, "config")
     cartographer_node_config = os.path.join(cartographer_config_dir, "bot_lds_2d.lua")
 
     # Check if the configuration file exists
@@ -64,7 +64,7 @@ def generate_launch_description():
         package="rviz2",
         executable="rviz2",
         arguments=[
-            "-d", os.path.join(get_package_share_directory("alphabot_localization"), "rviz", "cartographer.rviz")],
+            "-d", os.path.join(get_package_share_directory("alphabot_mapping"), "rviz", "cartographer.rviz")],
         condition=IfCondition(LaunchConfiguration("rviz")),
     )
 

@@ -44,17 +44,11 @@ def generate_launch_description():
         ],
     )
 
-    # start_imu_broadcaster_cmd = Node(
-    #     # condition=IfCondition(use_ros2_control),
-    #     package="controller_manager",
-    #     executable="spawner",
-    #     arguments=["imu_broadcaster"],
-    # )
+
 
     return LaunchDescription(
         [
             robot_state_publisher_node,
             controller_manager,
-            # start_imu_broadcaster_cmd,
         ]
     )
