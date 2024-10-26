@@ -8,12 +8,6 @@ import os
 
 def generate_launch_description():
 
-    use_python_arg = DeclareLaunchArgument(
-        "use_python",
-        default_value="False",
-    )
-
-    use_python = LaunchConfiguration("use_python")
 
     static_transform_publisher = Node(
         package="tf2_ros",
@@ -32,22 +26,7 @@ def generate_launch_description():
         parameters=[os.path.join(get_package_share_directory("alphabot_localization"), "config", "ekf.yaml")],
     )
 
-    imu_republisher_py = Node(
-        package="alphabot_localization",
-        executable="imu_republisher.py",
-        condition=IfCondition(use_python),
-    )
-
-    imu_republisher_cpp = Node(
-        package="alphabot_localization",
-        executable="imu_republisher",
-        condition=UnlessCondition(use_python),
-    )
-
     return LaunchDescription([
-        use_python_arg,
         static_transform_publisher,
         robot_localization,
-        imu_republisher_py,
-        imu_republisher_cpp,   
     ])

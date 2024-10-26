@@ -51,16 +51,16 @@ def generate_launch_description():
         executable="mpu6050_driver.py"
     )
 
-    robot_localization_node = Node(
-        package="robot_localization",
-        executable="ekf_node",
-        name="ekf_filter_node",
-        output="screen",
-        parameters=[
-            os.path.join(alphabot_controller_package, "config/ekf.yaml"),
-            {"use_sim_time": "false"},
-        ],
+    robot_localization_launch = IncludeLaunchDescription(
+        os.path.join(
+            get_package_share_directory("alphabot_localization"),
+            "launch",
+            "local_localization.launch.py",
+        ),
     )
+
+
+    
 
     return LaunchDescription(
         [
@@ -69,6 +69,6 @@ def generate_launch_description():
             scanner,
             twist_mux_launch,
             imu_driver_node,
-            # robot_localization_node,
+            robot_localization_launch,
         ]
     )
