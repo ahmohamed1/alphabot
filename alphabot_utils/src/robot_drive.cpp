@@ -7,6 +7,7 @@ This code based on https://wiki.ros.org/pr2_controllers/Tutorials/Using%20the%20
 #include <iostream>
 #include <memory>
 #include <cmath>
+#include <stdlib.h>
 
 #include <rclcpp/rclcpp.hpp>
 #include <geometry_msgs/msg/twist.hpp>
@@ -140,7 +141,7 @@ bool turnOdom(bool clockwise, double degrees)
       geometry_msgs::msg::TransformStamped current_transform;
       try
       {
-        current_transform = tf_buffer_->lookupTransform("base_footprint", "odom", tf2::TimePointZero);
+        current_transform = tf_buffer_->lookupTransform("/base_footprint", "/odom", tf2::TimePointZero);
       }
       catch (tf2::TransformException &ex)
       {
@@ -188,11 +189,15 @@ bool turnOdom(bool clockwise, double degrees)
 
 int main(int argc, char **argv)
 {
+
+  float distance = 0.5;
+
+  std::cout<<distance<<std::endl;
   // Initialize the ROS 2 node
   rclcpp::init(argc, argv);
 
   auto driver = std::make_shared<RobotDriver>();
-  driver->driveForwardOdom(1.0);
+  driver->driveForwardOdom(distance);
   // driver->turnOdom(false, 90);
   // driver->driveForwardOdom(1.0);
   // driver->turnOdom(false, 90);
