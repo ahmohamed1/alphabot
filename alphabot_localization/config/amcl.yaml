@@ -5,6 +5,8 @@ amcl:
     alpha2: 0.2
     alpha3: 0.2
     alpha4: 0.2
+    robot_radius: 0.145
+
     base_frame_id: "base_footprint"
     beam_skip_distance: 0.5
     beam_skip_error_threshold: 0.9
