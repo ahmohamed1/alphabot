@@ -1,12 +1,16 @@
 <?xml version="1.0"?>
 
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="alphabot">
+    <!-- Start GZ or Ignition depending on ROS 2 Version -->
+    <xacro:arg name="is_ignition" default="true"/>
+
     <!-- Load Simulated or Real Hardware Interfaces -->
     <xacro:arg name="is_sim" default="true"/>
 
+
     <xacro:include filename="$(find alphabot_description)/urdf/alphabot_gazebo.xacro"/> 
     <xacro:include filename="$(find alphabot_description)/urdf/alphabot_ros2_control.xacro"/>  
-    <xacro:include filename="$(find alphabot_description)/urdf/depth_camera.xacro" />
+    <!-- <xacro:include filename="$(find alphabot_description)/urdf/depth_camera.xacro" /> -->
 
     <xacro:property name="wheel_radius" value="0.034" />
     <xacro:property name="wheel_width" value="0.012" />
@@ -21,6 +25,12 @@
     </material>
     <material name="black">
         <color rgba="0 0 0 1"/>
+    </material>
+    <material name="silver">
+        <color rgba="0.79 0.82 0.93 1"/>
+    </material>
+    <material name="dark_grey">
+        <color rgba="0.3 0.3 0.3 1"/>
     </material>
 
     <link name="base_footprint"/>

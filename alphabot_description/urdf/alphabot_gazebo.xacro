@@ -57,16 +57,28 @@
         <minDepth>0.001</minDepth>
         <maxVel>0.1</maxVel>
     </gazebo>
-
+    
     <gazebo>
-        <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
-            <robot_param>robot_description</robot_param>
-            <robot_param_node>robot_state_publisher</robot_param_node>
-            <parameters>$(find alphabot_controller)/config/alphabot_controllers.yaml</parameters>
-        </plugin>
-    </gazebo>
+    <!-- ROS 2 Humble -->
+    <xacro:if value="$(arg is_ignition)">
+      <plugin filename="ign_ros2_control-system" name="ign_ros2_control::IgnitionROS2ControlPlugin">
+        <parameters>$(find alphabot_controller)/config/alphabot_controllers.yaml</parameters>
+      </plugin>
+      <plugin filename="ignition-gazebo-imu-system" name="ignition::gazebo::systems::Imu">
+      </plugin>
+    </xacro:if>
 
-    <!-- 2D Laser Sensor -->
+    <!-- ROS 2 Iron or above -->
+    <xacro:unless value="$(arg is_ignition)">
+      <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+        <parameters>$(find alphabot_controller)/config/alphabot_controllers.yaml</parameters>
+      </plugin>
+      <plugin filename="gz-sim-imu-system" name="gz::sim::systems::Imu">
+      </plugin>
+    </xacro:unless>
+  </gazebo>
+
+<!-- 
   <gazebo reference="laser_link">
     <sensor name="lidar" type="ray">
       <always_on>true</always_on>
@@ -102,7 +114,6 @@
     </sensor>
   </gazebo>
 
-  <!-- IMU SENSOR -->
    <gazebo reference="imu_link">
     <sensor name="imu" type="imu">
         <always_on>true</always_on>
@@ -151,6 +162,6 @@
         </imu>
         <plugin name="imu" filename="libgazebo_ros_imu_sensor.so"/>
     </sensor>
-  </gazebo>
+  </gazebo> -->
     
 </robot>
