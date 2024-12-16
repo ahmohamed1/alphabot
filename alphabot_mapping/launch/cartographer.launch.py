@@ -77,6 +77,6 @@ def generate_launch_description():
             # Nodes
             cartographer_node,
             cartographer_occupancy_grid_node,
-            rviz,
+            # rviz,
         ]
     )
