@@ -8,9 +8,6 @@ controller_manager:
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
 
-    simple_velocity_controller:
-      type: velocity_controllers/JointGroupVelocityController
-
     imu_broadcaster:
       type: imu_sensor_broadcaster/IMUSensorBroadcaster 
 
@@ -67,21 +64,3 @@ alphabot_controller:
         max_acceleration       : 0.5  # rad/s^2
         has_jerk_limits        : false
         max_jerk               : 2.5  # rad/s^3
-
-
-simple_velocity_controller:
-  ros__parameters:
-    joints:
-      - wheel_left_joint
-      - wheel_right_joint
-
-# imu_broadcaster:
-#   ros__parameters:
-
-#     sensor_name: mpu6050
-#     frame_id: imu_link
-   
-#    # 500 data points used to calculated covariances
-#     static_covariance_orientation: [2.63882e-06, 0.0, 0.0, 0.0, 7.50018e-06, 0.0, 0.0, 0.0, 2.89257e-09]
-#     static_covariance_angular_velocity: [2.71413e-07, 0.0, 0.0, 0.0, 6.79488e-07, 0.0, 0.0, 0.0, 4.37879e-07]
-#     static_covariance_linear_acceleration: [0.00133755, 0.0, 0.0, 0.0, 0.000209753, 0.0, 0.0, 0.0, 0.00143276]
