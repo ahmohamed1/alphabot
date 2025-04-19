@@ -1,10 +1,9 @@
 import os
-
-from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from ament_index_python.packages import get_package_share_directory
 from launch_ros.actions import Node
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 
 
 def generate_launch_description():
@@ -14,28 +13,42 @@ def generate_launch_description():
     amcl_config = LaunchConfiguration("amcl_config")
     lifecycle_nodes = ["map_server", "amcl"]
 
-    map_name_arg = DeclareLaunchArgument("map_name", default_value="small_house")
+    map_name_arg = DeclareLaunchArgument(
+        "map_name",
+        default_value="small_house"
+    )
 
-    use_sim_time_arg = DeclareLaunchArgument("use_sim_time", default_value="true")
+    use_sim_time_arg = DeclareLaunchArgument(
+        "use_sim_time",
+        default_value="true"
+    )
 
     amcl_config_arg = DeclareLaunchArgument(
         "amcl_config",
         default_value=os.path.join(
-            get_package_share_directory("alphabot_localization"), "config", "amcl.yaml"
+            get_package_share_directory("alphabot_localization"),
+            "config",
+            "amcl.yaml"
         ),
-        description="Full path to amcl yaml file to load",
+        description="Full path to amcl yaml file to load"
     )
 
-    map_path = PathJoinSubstitution(
-        [get_package_share_directory("alphabot_mapping"), "maps", map_name, "map.yaml"]
-    )
-
+    map_path = PathJoinSubstitution([
+        get_package_share_directory("alphabot_mapping"),
+        "maps",
+        map_name,
+        "map.yaml"
+    ])
+    
     nav2_map_server = Node(
         package="nav2_map_server",
         executable="map_server",
         name="map_server",
         output="screen",
-        parameters=[{"yaml_filename": map_path}, {"use_sim_time": use_sim_time}],
+        parameters=[
+            {"yaml_filename": map_path},
+            {"use_sim_time": use_sim_time}
+        ],
     )
 
     nav2_amcl = Node(
@@ -58,29 +71,15 @@ def generate_launch_description():
         parameters=[
             {"node_names": lifecycle_nodes},
             {"use_sim_time": use_sim_time},
-            {"autostart": True},
+            {"autostart": True}
         ],
     )
 
-    nav2_navigator = IncludeLaunchDescription(
-        os.path.join(
-            get_package_share_directory("nav2_bringup"),
-            "launch",
-            "navigation_launch.py",
-        ),
-        launch_arguments={
-            "use_sim_time": use_sim_time,
-        }.items(),
-    )
-
-    return LaunchDescription(
-        [
-            map_name_arg,
-            use_sim_time_arg,
-            amcl_config_arg,
-            nav2_map_server,
-            nav2_amcl,
-            nav2_lifecycle_manager,
-            nav2_navigator,
-        ]
-    )
+    return LaunchDescription([
+        map_name_arg,
+        use_sim_time_arg,
+        amcl_config_arg,
+        nav2_map_server,
+        nav2_amcl,
+        nav2_lifecycle_manager,
+    ])
