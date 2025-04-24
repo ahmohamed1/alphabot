@@ -42,7 +42,7 @@ void DijkstraPlanner::goalCallback(const geometry_msgs::msg::PoseStamped::Shared
 
     geometry_msgs::msg::TransformStamped map_to_base_tf;
     try{
-        map_to_base_tf = tf_buffer_->lookupTransform(map_->header.frame_id, "base_footpring", tf2::TimePointZero);
+        map_to_base_tf = tf_buffer_->lookupTransform(map_->header.frame_id, "base_footprint", tf2::TimePointZero);
     }catch (const tf2::TransformException &ex) {
         RCLCPP_ERROR(get_logger(), "Could not transform from the map to base_footprint");
         return;
@@ -54,7 +54,7 @@ void DijkstraPlanner::goalCallback(const geometry_msgs::msg::PoseStamped::Shared
     map_to_base_pose.orientation = map_to_base_tf.transform.rotation;
 
     auto path = plan(map_to_base_pose, pose->pose);
-    if(path.poses.empty()){
+    if(!path.poses.empty()){
         RCLCPP_INFO(get_logger(), "Shortest path found");
         path_pub_->publish(path);
     }else{
@@ -102,7 +102,7 @@ nav_msgs::msg::Path DijkstraPlanner::plan(const geometry_msgs::msg::Pose & start
 
     nav_msgs::msg::Path path;
     path.header.frame_id = map_->header.frame_id;
-    while(active_node.prev && rclcpp::ok()){
+    while(active_node.prev && rclcpp::ok()) {
         geometry_msgs::msg::Pose last_pose = gridToWorld(active_node);
         geometry_msgs::msg::PoseStamped last_pose_stamped;
         last_pose_stamped.header.frame_id = map_->header.frame_id;
@@ -123,18 +123,18 @@ GraphNode DijkstraPlanner::worldToGrid(const geometry_msgs::msg::Pose & pose)
 
 geometry_msgs::msg::Pose DijkstraPlanner::gridToWorld(const GraphNode & node){
     geometry_msgs::msg::Pose pose;
-    pose.position.x = node.x*  map_->info.resolution + map_->info.origin.position.x;
-    pose.position.y = node.y*  map_->info.resolution + map_->info.origin.position.y;
+    pose.position.x = node.x * map_->info.resolution + map_->info.origin.position.x;
+    pose.position.y = node.y * map_->info.resolution + map_->info.origin.position.y;
     return pose;
 }
 
 bool DijkstraPlanner::poseOnMap(const GraphNode & node){
-    return node.x>=0 && node.x < static_cast<int>(map_->info.width) &&
-           node.y>=0 && node.y < static_cast<int>(map_->info.height);
+    return node.x < static_cast<int>(map_->info.width) && node.x >= 0 &&
+            node.y < static_cast<int>(map_->info.height) && node.y >= 0;
 }
 
 unsigned int DijkstraPlanner::poseToCell(const GraphNode & node){
-    return node.y * map_->info.width + node.x;
+    return map_->info.width * node.y + node.x;
 }
 
 }
