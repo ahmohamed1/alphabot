@@ -18,12 +18,21 @@ find_package(tf2_ros REQUIRED)
 include_directories(include)
 
 add_executable(dijkstra_planner src/dijkstra_planner.cpp)
-ament_target_dependencies(dijkstra_planner
+add_executable(astar_planner src/astar_planner.cpp)
+ament_target_dependencies(dijkstra_planner 
   rclcpp
   nav_msgs
   geometry_msgs
   tf2_ros
 )
+
+ament_target_dependencies(astar_planner
+  rclcpp
+  nav_msgs
+  geometry_msgs
+  tf2_ros
+)
+
 
 
 ament_python_install_package(${PROJECT_NAME})
@@ -35,6 +44,7 @@ install(
 
 install(TARGETS
   dijkstra_planner
+  astar_planner
   DESTINATION lib/${PROJECT_NAME}
 )
 
