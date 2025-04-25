@@ -1,11 +1,10 @@
 cmake_minimum_required(VERSION 3.8)
-project(alphabot_planning)
+project(alphabot_motion)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-# find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
 
@@ -13,25 +12,23 @@ find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
 
 include_directories(include)
 
-add_executable(dijkstra_planner src/dijkstra_planner.cpp)
-add_executable(astar_planner src/astar_planner.cpp)
-ament_target_dependencies(dijkstra_planner 
+add_executable(pd_motion_planner src/pd_motion_planner.cpp)
+ament_target_dependencies(pd_motion_planner 
   rclcpp
   nav_msgs
   geometry_msgs
+  tf2
   tf2_ros
+  tf2_geometry_msgs
 )
 
-ament_target_dependencies(astar_planner
-  rclcpp
-  nav_msgs
-  geometry_msgs
-  tf2_ros
-)
+
 
 ament_python_install_package(${PROJECT_NAME})
 
@@ -41,8 +38,7 @@ install(
 )
 
 install(TARGETS
-  dijkstra_planner
-  astar_planner
+  pd_motion_planner
   DESTINATION lib/${PROJECT_NAME}
 )
 
@@ -59,6 +55,9 @@ ament_export_dependencies(
   rclpy
   nav_msgs
   geometry_msgs
+  tf2
   tf2_ros
+  tf2_geometry_msgs
 )
+
 ament_package()

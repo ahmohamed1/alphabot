@@ -1,30 +1,36 @@
 import os
-
-from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
+from ament_index_python.packages import get_package_share_directory
+from launch_ros.actions import Node
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
-from launch_ros.actions import Node
 
 
 def generate_launch_description():
 
     use_sim_time = LaunchConfiguration("use_sim_time")
     slam_config = LaunchConfiguration("slam_config")
-    lifecycle_nodes = ["map_saver_server"]
 
-    use_sim_time_arg = DeclareLaunchArgument("use_sim_time", default_value="true")
+    ros_distro = os.environ["ROS_DISTRO"]
+    lifecycle_nodes = ["map_saver_server"]
+    if ros_distro != "humble":
+        lifecycle_nodes.append("slam_toolbox")
+
+    use_sim_time_arg = DeclareLaunchArgument(
+        "use_sim_time",
+        default_value="true"
+    )
 
     slam_config_arg = DeclareLaunchArgument(
         "slam_config",
         default_value=os.path.join(
             get_package_share_directory("alphabot_mapping"),
             "config",
-            "slam_toolbox.yaml",
+            "slam_toolbox.yaml"
         ),
-        description="Full path to slam yaml file to load",
+        description="Full path to slam yaml file to load"
     )
-
+    
     nav2_map_saver = Node(
         package="nav2_map_server",
         executable="map_saver_server",
@@ -57,16 +63,14 @@ def generate_launch_description():
         parameters=[
             {"node_names": lifecycle_nodes},
             {"use_sim_time": use_sim_time},
-            {"autostart": True},
+            {"autostart": True}
         ],
     )
 
-    return LaunchDescription(
-        [
-            use_sim_time_arg,
-            slam_config_arg,
-            nav2_map_saver,
-            slam_toolbox,
-            nav2_lifecycle_manager,
-        ]
-    )
+    return LaunchDescription([
+        use_sim_time_arg,
+        slam_config_arg,
+        nav2_map_saver,
+        slam_toolbox,
+        nav2_lifecycle_manager,
+    ])
