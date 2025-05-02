@@ -41,8 +41,8 @@ def generate_launch_description():
             "config_topics": os.path.join(
                 alphabot_controller_package, "config", "twist_mux.yaml"
             ),
-            # "config_locks":os.path.join(alphabot_controller_package,"config","twist_mux_lock.yaml"),
-            # "config_joy":os.path.join(alphabot_controller_package,"config","twist_mux_joy.yaml"),
+            "config_locks":os.path.join(alphabot_controller_package,"config","twist_mux_lock.yaml"),
+            "config_joy":os.path.join(alphabot_controller_package,"config","twist_mux_joy.yaml"),
         }.items(),
     )
 

@@ -1,38 +1,34 @@
 import os
-
 from ament_index_python.packages import get_package_share_directory
 
-from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration
-from launch_ros.actions import Node
-
+import launch
+import launch_ros.actions
 
 def generate_launch_description():
+    joy_config = launch.substitutions.LaunchConfiguration('joy_config')
+    joy_dev = launch.substitutions.LaunchConfiguration('joy_dev')
+    publish_stamped_twist = launch.substitutions.LaunchConfiguration('publish_stamped_twist')
+    config_filepath = launch.substitutions.LaunchConfiguration('config_filepath')
 
-    use_sim_time_arg = DeclareLaunchArgument(name="use_sim_time", default_value="True",
-                                      description="Use simulated time"
-    )
+    return launch.LaunchDescription([
+        launch.actions.DeclareLaunchArgument('joy_vel', default_value='/alphabot_controller/cmd_vel'),
+        launch.actions.DeclareLaunchArgument('joy_config', default_value='xbox'),
+        launch.actions.DeclareLaunchArgument('joy_dev', default_value='0'),
+        launch.actions.DeclareLaunchArgument('publish_stamped_twist', default_value='true'),
+        launch.actions.DeclareLaunchArgument('config_filepath', default_value=os.path.join(
+            get_package_share_directory('alphabot_controller'), 'config/joy_config.yaml')),
 
-    joy_teleop = Node(
-        package="joy_teleop",
-        executable="joy_teleop",
-        parameters=[os.path.join(get_package_share_directory("alphabot_controller"), "config", "joy_teleop.yaml"),
-                    {"use_sim_time": LaunchConfiguration("use_sim_time")}],
-    )
-
-    joy_node = Node(
-        package="joy",
-        executable="joy_node",
-        name="joystick",
-        parameters=[os.path.join(get_package_share_directory("alphabot_controller"), "config", "joy_config.yaml"),
-                    {"use_sim_time": LaunchConfiguration("use_sim_time")}]
-    )
-
-    return LaunchDescription(
-        [
-            use_sim_time_arg,
-            joy_teleop,
-            joy_node
-        ]
-    )
+        launch_ros.actions.Node(
+            package='joy', executable='joy_node', name='joy_node',
+            parameters=[{
+                'device_id': joy_dev,
+                'deadzone': 0.2,
+                'autorepeat_rate': 20.0,
+            }]),
+        launch_ros.actions.Node(
+            package='teleop_twist_joy', executable='teleop_node',
+            name='teleop_twist_joy_node',
+            parameters=[config_filepath, {'publish_stamped_twist': publish_stamped_twist}],
+            remappings={('/cmd_vel', launch.substitutions.LaunchConfiguration('joy_vel'))},
+            ),
+    ])
