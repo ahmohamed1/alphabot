@@ -39,6 +39,7 @@ PDMotionPlanner::PDMotionPlanner() : Node("pd_motion_planner_node"),
 void PDMotionPlanner::pathCallback(const nav_msgs::msg::Path::SharedPtr path)
 {
     global_plane_ =*path;
+    RCLCPP_INFO(get_logger(), "Path recived!!");
 }
 
 void PDMotionPlanner::controlLoop()
