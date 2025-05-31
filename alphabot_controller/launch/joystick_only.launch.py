@@ -13,7 +13,7 @@ def generate_launch_description():
     
     alphabot_controller_pkg = get_package_share_directory('alphabot_controller')
 
-    use_sim_time_arg = DeclareLaunchArgument(name="use_sim_time", default_value="True",
+    use_sim_time_arg = DeclareLaunchArgument(name="use_sim_time", default_value="False",
                                       description="Use simulated time"
     )
 
@@ -59,7 +59,7 @@ def generate_launch_description():
             use_sim_time_arg,
             joy_teleop,
             joy_node,
-            twist_mux_launch,
-            twist_relay_node,
+            # twist_mux_launch,
+            # twist_relay_node,
         ]
     )

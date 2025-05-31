@@ -70,4 +70,8 @@ ament_export_dependencies(
   tf2_geometry_msgs
 )
 
+install(PROGRAMS
+  ${PROJECT_NAME}/absolute_move.py
+  DESTINATION lib/${PROJECT_NAME}
+)
 ament_package()
