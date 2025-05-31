@@ -27,6 +27,15 @@ ament_target_dependencies(pd_motion_planner
   tf2_ros
   tf2_geometry_msgs
 )
+add_executable(pure_pursuit src/pure_pursuit.cpp)
+ament_target_dependencies(pure_pursuit
+  rclcpp
+  nav_msgs
+  geometry_msgs
+  tf2
+  tf2_ros
+  tf2_geometry_msgs
+)
 
 
 
@@ -39,6 +48,7 @@ install(
 
 install(TARGETS
   pd_motion_planner
+  pure_pursuit
   DESTINATION lib/${PROJECT_NAME}
 )
 
