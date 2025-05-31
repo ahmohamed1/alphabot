@@ -32,7 +32,7 @@ from rclpy.qos import QoSProfile, QoSReliabilityPolicy
 class Turtlebot3AbsoluteMove(Node):
 
     def __init__(self):
-        super().__init__('turtlebot3_absolute_move')
+        super().__init__('absolute_move')
 
         print('TurtleBot3 Absolute Move')
         print('----------------------------------------------')
@@ -57,13 +57,13 @@ class Turtlebot3AbsoluteMove(Node):
             reliability=QoSReliabilityPolicy.BEST_EFFORT
         )
 
-        self.cmd_vel_pub = self.create_publisher(Twist, '/cmd_vel', qos)
+        self.cmd_pub = self.create_publisher(Twist, "/joy_vel", qos)
 
         self.cmd_vel = Twist()
 
         self.odom_sub = self.create_subscription(
             Odometry,
-            'odom',
+            '/alphabot_controller/odom',
             self.get_odom,
             10)
 
@@ -81,7 +81,7 @@ class Turtlebot3AbsoluteMove(Node):
         distance = math.sqrt(pow(self.position_error.x, 2) +
                              pow(self.position_error.y, 2))
         goal_direction = math.atan2(self.position_error.y, self.position_error.x)
-
+        cmd_vel = Twist()
         if distance > 0.05:
             path_angle = goal_direction - self.heading
 
@@ -90,20 +90,20 @@ class Turtlebot3AbsoluteMove(Node):
             elif path_angle > math.pi:
                 path_angle -= 2 * math.pi
 
-            self.cmd_vel.angular.z = path_angle
-            self.cmd_vel.linear.x = min(self.linear_speed * distance, 0.4)
+            cmd_vel.angular.z = path_angle
+            cmd_vel.linear.x = min(self.linear_speed * distance, 0.4)
 
-            self.cmd_vel.angular.z = max(min(self.cmd_vel.angular.z, 1.5), -1.5)
+            cmd_vel.angular.z = max(min(cmd_vel.angular.z, 1.5), -1.5)
 
             self.get_logger().info(
                 f'Moving to x: {self.goal_position.x:.2f}, y: {self.goal_position.y:.2f} '
                 f'(current: {self.position.x:.2f}, {self.position.y:.2f})'
             )
 
-            self.cmd_vel_pub.publish(self.cmd_vel)
+            self.cmd_pub.publish(cmd_vel)
 
         else:
-            self.cmd_vel.linear.x = 0.0
+            cmd_vel.linear.x = 0.0
             self.heading_error = self.goal_heading - self.heading
 
             if self.heading_error < -math.pi:
@@ -112,7 +112,7 @@ class Turtlebot3AbsoluteMove(Node):
                 self.heading_error -= 2 * math.pi
 
             turn_speed = max(min(abs(self.heading_error) * 1.0, 1.0), 0.1)
-            self.cmd_vel.angular.z = turn_speed if self.heading_error > 0 else -turn_speed
+            cmd_vel.angular.z = turn_speed if self.heading_error > 0 else -turn_speed
 
             self.get_logger().info(
                 f'Rotating to heading: {math.degrees(self.goal_heading):.2f}° '
@@ -120,8 +120,8 @@ class Turtlebot3AbsoluteMove(Node):
             )
 
             if abs(math.degrees(self.heading_error)) < 1.0:
-                self.cmd_vel.angular.z = 0.0
-                self.cmd_vel_pub.publish(self.cmd_vel)
+                cmd_vel.angular.z = 0.0
+                self.cmd_pub.publish(cmd_vel)
 
                 self.get_logger().info(
                     f'Goal reached: x: {self.goal_position.x:.2f}, y: {self.goal_position.y:.2f}, '
@@ -130,7 +130,7 @@ class Turtlebot3AbsoluteMove(Node):
 
                 self.get_key()
 
-        self.cmd_vel_pub.publish(self.cmd_vel)
+        self.cmd_pub.publish(cmd_vel)
 
     def get_odom(self, msg):
         self.position = msg.pose.pose.position

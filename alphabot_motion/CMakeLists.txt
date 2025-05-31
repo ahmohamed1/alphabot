@@ -71,7 +71,9 @@ ament_export_dependencies(
 )
 
 install(PROGRAMS
-  ${PROJECT_NAME}/absolute_move.py
+  ${PROJECT_NAME}/absolute_move.py 
+  ${PROJECT_NAME}/publish_cmd_vel.py 
+  ${PROJECT_NAME}/relative_move.py
   DESTINATION lib/${PROJECT_NAME}
 )
 ament_package()
