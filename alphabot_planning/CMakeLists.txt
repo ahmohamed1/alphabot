@@ -39,15 +39,18 @@ set(dependencies
 add_library(dijkstra_planner SHARED src/dijkstra_planner.cpp)
 ament_target_dependencies(dijkstra_planner ${dependencies})
 
+add_library(astar_planner SHARED src/astar_planner.cpp)
+ament_target_dependencies(astar_planner ${dependencies})
+
 pluginlib_export_plugin_description_file(nav2_core global_planner_plugins.xml)
 
-add_executable(astar_planner src/astar_planner.cpp)
-ament_target_dependencies(astar_planner
-  rclcpp
-  nav_msgs
-  geometry_msgs
-  tf2_ros
-)
+# add_executable(astar_planner src/astar_planner.cpp)
+# ament_target_dependencies(astar_planner
+#   rclcpp
+#   nav_msgs
+#   geometry_msgs
+#   tf2_ros
+# )
 
 ament_python_install_package(${PROJECT_NAME})
 
@@ -56,13 +59,14 @@ install(
   DESTINATION include
 )
 
-install(TARGETS
-  astar_planner
-  DESTINATION lib/${PROJECT_NAME}
-)
+# install(TARGETS
+#   astar_planner
+#   DESTINATION lib/${PROJECT_NAME}
+# )
 
 install(TARGETS
   dijkstra_planner
+  astar_planner
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION lib/${PROJECT_NAME}
@@ -77,16 +81,11 @@ install(FILES global_planner_plugins.xml
   DESTINATION share/${PROJECT_NAME}
 )
 
-if(BUILD_TESTING)
-  find_package(ament_lint_auto REQUIRED)
-  set(ament_cmake_copyright_FOUND TRUE)
-  set(ament_cmake_cpplint_FOUND TRUE)
-  ament_lint_auto_find_test_dependencies()
-endif()
 
 ament_export_include_directories(include)
 ament_export_libraries(
   dijkstra_planner
+  astar_planner
 )
 ament_export_dependencies(${dependencies})
 ament_package()

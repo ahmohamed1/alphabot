@@ -20,15 +20,15 @@ void DijkstraPlanner::configure(const rclcpp_lifecycle::LifecycleNode::WeakPtr &
 
 void DijkstraPlanner::cleanup()
 {
-    RCLCPP_INFO(node_->get_logger(),"Cleaning up plugin %s of type DijkstraOlanner", name_.c_str());
+    RCLCPP_INFO(node_->get_logger(),"Cleaning up plugin %s of type DijkstraPlanner", name_.c_str());
 }
 void DijkstraPlanner::activate()
 {
-    RCLCPP_INFO(node_->get_logger(),"Activating up plugin %s of type DijkstraOlanner", name_.c_str());
+    RCLCPP_INFO(node_->get_logger(),"Activating up plugin %s of type DijkstraPlanner", name_.c_str());
 }
 void DijkstraPlanner::deactivate()
 {
-    RCLCPP_INFO(node_->get_logger(),"Deactivating up plugin %s of type DijkstraOlanner", name_.c_str());
+    RCLCPP_INFO(node_->get_logger(),"Deactivating up plugin %s of type DijkstraPlanner", name_.c_str());
 }
 
 nav_msgs::msg::Path DijkstraPlanner::createPlan(const geometry_msgs::msg::PoseStamped & start, 
