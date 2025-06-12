@@ -39,22 +39,23 @@ set(dependencies
 add_library(pd_motion_planner SHARED src/pd_motion_planner.cpp)
 ament_target_dependencies(pd_motion_planner ${dependencies})
 
-# add_library(pure_pursuit SHARED src/pure_pursuit.cpp)
-# ament_target_dependencies(pure_pursuit ${dependencies})
+add_library(pure_pursuit SHARED src/pure_pursuit.cpp)
+ament_target_dependencies(pure_pursuit ${dependencies})
 
 pluginlib_export_plugin_description_file(nav2_core motion_planner_plugins.xml)
 
-add_executable(pure_pursuit src/pure_pursuit.cpp)
-ament_target_dependencies(pure_pursuit
-  rclcpp
-  nav_msgs
-  geometry_msgs
-  tf2
-  tf2_ros
-  tf2_geometry_msgs
-)
+# add_executable(pure_pursuit src/pure_pursuit.cpp)
+# ament_target_dependencies(pure_pursuit
+#   rclcpp
+#   nav_msgs
+#   geometry_msgs
+#   tf2
+#   tf2_ros
+#   tf2_geometry_msgs
+# )
 install(TARGETS
   pd_motion_planner
+  pure_pursuit
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION lib/${PROJECT_NAME}
@@ -87,7 +88,7 @@ ament_export_dependencies(
 
 ament_export_libraries(
   pd_motion_planner
-  # pure_pursuit
+  pure_pursuit
 )
 
 install(PROGRAMS
