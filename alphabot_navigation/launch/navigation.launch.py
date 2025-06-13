@@ -18,7 +18,8 @@ def generate_launch_description():
         default_value="true"
     )
 
-    lifecycle_nodes = ["controller_server", "planner_server", "smoother_server","bt_navigator"]
+    lifecycle_nodes = ["controller_server", "planner_server", "smoother_server",
+                       "bt_navigator","behavior_server"]
 
     nav2_controller_server = Node(
         package="nav2_controller",
@@ -75,6 +76,20 @@ def generate_launch_description():
         ],
     )
 
+    nav2_behaviors= Node(
+        package="nav2_behaviors",
+        executable="behavior_server",
+        name="behavior_server",
+        output="screen",
+        parameters=[
+            os.path.join(
+                alphabot_navigation_pkg,
+                "config",
+                "behavior_server.yaml"),
+            {"use_sim_time": use_sim_time}
+        ],
+    )
+
     nav2_lifecycle_manager = Node(
         package="nav2_lifecycle_manager",
         executable="lifecycle_manager",
@@ -93,5 +108,6 @@ def generate_launch_description():
         nav2_planner_server,
         nav2_smoother_server,
         nav2_bt_navigator,
+        nav2_behaviors,
         nav2_lifecycle_manager,
     ])
