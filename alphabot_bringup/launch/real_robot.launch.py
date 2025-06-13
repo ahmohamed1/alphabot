@@ -1,20 +1,19 @@
 import os
-
-from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
 from launch.conditions import IfCondition, UnlessCondition
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
+from ament_index_python.packages import get_package_share_directory
 
 
 def generate_launch_description():
-
     use_slam = LaunchConfiguration("use_slam")
 
-    use_slam_arg = DeclareLaunchArgument("use_slam", default_value="false")
-
-    alphabot_controller_package = get_package_share_directory("alphabot_controller")
+    use_slam_arg = DeclareLaunchArgument(
+        "use_slam",
+        default_value="false"
+    )
 
     hardware_interface = IncludeLaunchDescription(
         os.path.join(
@@ -22,6 +21,18 @@ def generate_launch_description():
             "launch",
             "hardware_interface.launch.py"
         ),
+    )
+
+    laser_driver = Node(
+            package="rplidar_ros",
+            executable="rplidar_node",
+            name="rplidar_node",
+            parameters=[os.path.join(
+                get_package_share_directory("alphabot_bringup"),
+                "config",
+                "rplidar_a1.yaml"
+            )],
+            output="screen"
     )
     
     controller = IncludeLaunchDescription(
@@ -42,70 +53,50 @@ def generate_launch_description():
             "launch",
             "joystick_teleop.launch.py"
         ),
+        launch_arguments={
+            "use_sim_time": "False"
+        }.items()
     )
-    
-    twist_mux_node = Node(
-        package="twist_mux",
-        executable="twist_mux",
-        remappings=[("/cmd_vel_out", "/alphabot_controller/cmd_vel_unstamped")],
-        parameters=[
-            {os.path.join(alphabot_controller_package, "config", "twist_mux.yaml")}
-        ],
+
+    imu_driver_node = Node(
+        package="alphabot_firmware",
+        executable="mpu6050_driver.py"
     )
 
     localization = IncludeLaunchDescription(
         os.path.join(
             get_package_share_directory("alphabot_localization"),
             "launch",
-            "global_localization.launch.py",
+            "global_localization.launch.py"
         ),
-        condition=UnlessCondition(use_slam),
+        condition=UnlessCondition(use_slam)
     )
 
     slam = IncludeLaunchDescription(
         os.path.join(
-            get_package_share_directory("alphabot_mapping"), "launch", "slam.launch.py"
+            get_package_share_directory("alphabot_mapping"),
+            "launch",
+            "slam.launch.py"
         ),
-        condition=IfCondition(use_slam),
+        condition=IfCondition(use_slam)
     )
 
-    # rviz_localization = Node(
-    #     package="rviz2",
-    #     executable="rviz2",
-    #     arguments=[
-    #         "-d",
-    #         os.path.join(
-    #             get_package_share_directory("alphabot_localization"),
-    #             "rviz",
-    #             "global_localization.rviz",
-    #         ),
-    #     ],
-    #     output="screen",
-    #     parameters=[{"use_sim_time": True}],
-    #     condition=UnlessCondition(use_slam),
-    # )
-
-    # rviz_slam = Node(
-    #     package="rviz2",
-    #     executable="rviz2",
-    #     arguments=[
-    #         "-d",
-    #         os.path.join(
-    #             get_package_share_directory("alphabot_mapping"), "rviz", "slam.rviz"
-    #         ),
-    #     ],
-    #     output="screen",
-    #     parameters=[{"use_sim_time": True}],
-    #     condition=IfCondition(use_slam),
-    # )
+    navigation = IncludeLaunchDescription(
+        os.path.join(
+            get_package_share_directory("alphabot_navigation"),
+            "launch",
+            "navigation.launch.py"
+        ),
+    )
+    
     return LaunchDescription([
         use_slam_arg,
         hardware_interface,
+        laser_driver,
         controller,
         # joystick,
-        twist_mux_node,
+        imu_driver_node,
         localization,
         slam,
-        # rviz_localization,
-        # rviz_slam,
+        navigation
     ])
