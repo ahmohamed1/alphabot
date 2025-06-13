@@ -64,13 +64,20 @@ def generate_launch_description():
         condition=IfCondition(use_slam)
     )
 
-    rviz_localization = Node(
+    navigation = IncludeLaunchDescription(
+        os.path.join(
+            get_package_share_directory("alphabot_navigation"),
+            "launch",
+            "navigation.launch.py"
+        )
+    )
+    rviz= Node(
         package="rviz2",
         executable="rviz2",
         arguments=["-d", os.path.join(
-                get_package_share_directory("alphabot_localization"),
+                get_package_share_directory("alphabot_navigation"),
                 "rviz",
-                "global_localization.rviz"
+                "nav2_default_view.rviz"
             )
         ],
         output="screen",
@@ -78,19 +85,19 @@ def generate_launch_description():
         condition=UnlessCondition(use_slam)
     )
 
-    rviz_slam = Node(
-        package="rviz2",
-        executable="rviz2",
-        arguments=["-d", os.path.join(
-                get_package_share_directory("alphabot_mapping"),
-                "rviz",
-                "slam.rviz"
-            )
-        ],
-        output="screen",
-        parameters=[{"use_sim_time": True}],
-        condition=IfCondition(use_slam)
-    )
+    # rviz_slam = Node(
+    #     package="rviz2",
+    #     executable="rviz2",
+    #     arguments=["-d", os.path.join(
+    #             get_package_share_directory("alphabot_mapping"),
+    #             "rviz",
+    #             "slam.rviz"
+    #         )
+    #     ],
+    #     output="screen",
+    #     parameters=[{"use_sim_time": True}],
+    #     condition=IfCondition(use_slam)
+    # )
     
     return LaunchDescription([
         use_slam_arg,
@@ -99,6 +106,6 @@ def generate_launch_description():
         joystick,
         localization,
         slam,
-        rviz_localization,
-        rviz_slam
+        navigation,
+        rviz
     ])
