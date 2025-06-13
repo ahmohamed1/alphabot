@@ -1,73 +1,24 @@
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, GroupAction, OpaqueFunction
+from launch.actions import DeclareLaunchArgument, GroupAction, IncludeLaunchDescription
 from launch_ros.actions import Node
 from launch.substitutions import LaunchConfiguration
 from launch.conditions import UnlessCondition, IfCondition
-
-
-def noisy_controller(context, *args, **kwargs):
-    use_python = LaunchConfiguration("use_python")
-    wheel_radius = float(LaunchConfiguration("wheel_radius").perform(context))
-    wheel_separation = float(LaunchConfiguration("wheel_separation").perform(context))
-    wheel_radius_error = float(LaunchConfiguration("wheel_radius_error").perform(context))
-    wheel_separation_error = float(LaunchConfiguration("wheel_separation_error").perform(context))
-
-    noisy_controller_py = Node(
-        package="alphabot_controller",
-        executable="noisy_controller.py",
-        parameters=[
-            {"wheel_radius": wheel_radius + wheel_radius_error,
-             "wheel_separation": wheel_separation + wheel_separation_error}],
-        condition=IfCondition(use_python),
-    )
-
-    noisy_controller_cpp = Node(
-        package="alphabot_controller",
-        executable="noisy_controller",
-        parameters=[
-            {"wheel_radius": wheel_radius + wheel_radius_error,
-             "wheel_separation": wheel_separation + wheel_separation_error}],
-        condition=UnlessCondition(use_python),
-    )
-
-    return [
-        noisy_controller_py,
-        noisy_controller_cpp,
-    ]
-
+import os
+from ament_index_python.packages import get_package_share_directory
 
 
 def generate_launch_description():
     
-    use_simple_controller_arg = DeclareLaunchArgument(
-        "use_simple_controller",
+    alphabot_controller_pkg = get_package_share_directory('alphabot_controller')
+
+    use_sim_time_arg = DeclareLaunchArgument(
+        "use_sim_time",
         default_value="True",
     )
-    use_python_arg = DeclareLaunchArgument(
-        "use_python",
-        default_value="False",
-    )
-    wheel_radius_arg = DeclareLaunchArgument(
-        "wheel_radius",
-        default_value="0.033",
-    )
-    wheel_separation_arg = DeclareLaunchArgument(
-        "wheel_separation",
-        default_value="0.118",
-    )
-    wheel_radius_error_arg = DeclareLaunchArgument(
-        "wheel_radius_error",
-        default_value="0.005",
-    )
-    wheel_separation_error_arg = DeclareLaunchArgument(
-        "wheel_separation_error",
-        default_value="0.02",
-    )
+
     
-    use_simple_controller = LaunchConfiguration("use_simple_controller")
-    use_python = LaunchConfiguration("use_python")
-    wheel_radius = LaunchConfiguration("wheel_radius")
-    wheel_separation = LaunchConfiguration("wheel_separation")
+    use_sim_time = LaunchConfiguration("use_sim_time")
+
 
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
@@ -85,53 +36,37 @@ def generate_launch_description():
         arguments=["alphabot_controller", 
                    "--controller-manager", 
                    "/controller_manager"
-        ],
-        condition=UnlessCondition(use_simple_controller),
-    )
-
-    simple_controller = GroupAction(
-        condition=IfCondition(use_simple_controller),
-        actions=[
-            Node(
-                package="controller_manager",
-                executable="spawner",
-                arguments=["simple_velocity_controller", 
-                        "--controller-manager", 
-                        "/controller_manager"
-                ]
-            ),
-            Node(
-                package="alphabot_controller",
-                executable="simple_controller.py",
-                parameters=[
-                    {"wheel_radius": wheel_radius,
-                    "wheel_separation": wheel_separation}],
-                condition=IfCondition(use_python),
-            ),
-            Node(
-                package="alphabot_controller",
-                executable="simple_controller",
-                parameters=[
-                    {"wheel_radius": wheel_radius,
-                    "wheel_separation": wheel_separation}],
-                condition=UnlessCondition(use_python),
-            ),
         ]
     )
 
-    # noisy_controller_launch = OpaqueFunction(function=noisy_controller)
+    twist_mux_launch = IncludeLaunchDescription(
+        os.path.join(
+            get_package_share_directory("twist_mux"),
+            "launch",
+            "twist_mux_launch.py"
+        ),
+        launch_arguments={
+            "cmd_vel_out": "alphabot_controller/cmd_vel_unstamped",
+            "config_locks": os.path.join(alphabot_controller_pkg, "config", "twist_mux_locks.yaml"),
+            "config_topics": os.path.join(alphabot_controller_pkg, "config", "twist_mux_topics.yaml"),
+            "config_joy": os.path.join(alphabot_controller_pkg, "config", "twist_mux_joy.yaml"),
+            "use_sim_time": LaunchConfiguration("use_sim_time"),
+        }.items(),
+    )
+
+    twist_relay_node = Node(
+        package="alphabot_controller",
+        executable="twist_relay",
+        name="twist_relay",
+        parameters=[{"use_sim_time": LaunchConfiguration("use_sim_time")}]
+    )
 
     return LaunchDescription(
         [
-            use_simple_controller_arg,
-            use_python_arg,
-            wheel_radius_arg,
-            wheel_separation_arg,
-            wheel_radius_error_arg,
-            wheel_separation_error_arg,
+            use_sim_time_arg,
             joint_state_broadcaster_spawner,
             wheel_controller_spawner,
-            simple_controller
-            # noisy_controller_launch,
+            # twist_mux_launch,
+            # twist_relay_node,
         ]
     )

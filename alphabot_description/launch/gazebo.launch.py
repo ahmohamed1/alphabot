@@ -1,6 +1,7 @@
 import os
 from os import pathsep
-from ament_index_python.packages import get_package_share_directory, get_package_prefix
+from pathlib import Path
+from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, SetEnvironmentVariable
@@ -13,13 +14,12 @@ from launch_ros.parameter_descriptions import ParameterValue
 
 def generate_launch_description():
     alphabot_description = get_package_share_directory("alphabot_description")
-    alphabot_description_prefix = get_package_prefix("alphabot_description")
-    gazebo_ros_dir = get_package_share_directory("gazebo_ros")
 
-    model_arg = DeclareLaunchArgument(name="model", default_value=os.path.join(
-                                      alphabot_description, "urdf", "alphabot.urdf.xacro"
-                                      ),
-                                      description="Absolute path to robot urdf file"
+    model_arg = DeclareLaunchArgument(
+        name="model", default_value=os.path.join(
+                alphabot_description, "urdf", "alphabot.urdf.xacro"
+            ),
+        description="Absolute path to robot urdf file"
     )
 
     world_name_arg = DeclareLaunchArgument(name="world_name", default_value="empty")
@@ -31,13 +31,25 @@ def generate_launch_description():
         ]
     )
 
-    model_path = os.path.join(alphabot_description, "models")
-    model_path += pathsep + os.path.join(alphabot_description_prefix, "share")
+    model_path = str(Path(alphabot_description).parent.resolve())
+    model_path += pathsep + os.path.join(get_package_share_directory("alphabot_description"), 'models')
 
-    env_var = SetEnvironmentVariable("GAZEBO_MODEL_PATH", model_path)
+    gazebo_resource_path = SetEnvironmentVariable(
+        "GZ_SIM_RESOURCE_PATH",
+        model_path
+        )
 
-    robot_description = ParameterValue(Command(["xacro ", LaunchConfiguration("model")]),
-                                       value_type=str)
+    ros_distro = os.environ["ROS_DISTRO"]
+    is_ignition = "True" if ros_distro == "humble" else "False"
+
+    robot_description = ParameterValue(Command([
+            "xacro ",
+            LaunchConfiguration("model"),
+            " is_ignition:=",
+            is_ignition
+        ]),
+        value_type=str
+    )
 
     robot_state_publisher_node = Node(
         package="robot_state_publisher",
@@ -46,34 +58,41 @@ def generate_launch_description():
                      "use_sim_time": True}]
     )
 
-    start_gazebo_server = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(gazebo_ros_dir, "launch", "gzserver.launch.py")
-        ),
-        launch_arguments={
-            "world": world_path,
-        }.items(),
+    gazebo = IncludeLaunchDescription(
+                PythonLaunchDescriptionSource([os.path.join(
+                    get_package_share_directory("ros_gz_sim"), "launch"), "/gz_sim.launch.py"]),
+                launch_arguments={
+                    "gz_args": PythonExpression(["'", world_path, " -v 4 -r'"])
+                }.items()
+             )
+
+    gz_spawn_entity = Node(
+        package="ros_gz_sim",
+        executable="create",
+        output="screen",
+        arguments=["-topic", "robot_description",
+                   "-name", "alphabot"],
     )
 
-    start_gazebo_client = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(gazebo_ros_dir, "launch", "gzclient.launch.py")
-        )
-    )
-
-    spawn_robot = Node(package="gazebo_ros", executable="spawn_entity.py",
-                        arguments=["-entity", "alphabot",
-                                   "-topic", "robot_description",
-                                  ],
-                        output="screen"
+    gz_ros2_bridge = Node(
+        package="ros_gz_bridge",
+        executable="parameter_bridge",
+        arguments=[
+            "/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock",
+            "/imu@sensor_msgs/msg/Imu[gz.msgs.IMU",
+            "/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan"
+        ],
+        remappings=[
+            ('/imu', '/imu/out'),
+        ]
     )
 
     return LaunchDescription([
-        env_var,
         model_arg,
         world_name_arg,
-        start_gazebo_server,
-        start_gazebo_client,
+        gazebo_resource_path,
         robot_state_publisher_node,
-        spawn_robot
+        gazebo,
+        gz_spawn_entity,
+        gz_ros2_bridge
     ])

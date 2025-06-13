@@ -3,31 +3,35 @@ import os
 from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration
 from launch.actions import IncludeLaunchDescription
 from launch_ros.actions import Node
 
 
 def generate_launch_description():
-
-
-    joy_params = os.path.join(get_package_share_directory("alphabot_controller"), "config", "joy_teleop.yaml")
     
+    alphabot_controller_pkg = get_package_share_directory('alphabot_controller')
+
+    use_sim_time_arg = DeclareLaunchArgument(name="use_sim_time", default_value="True",
+                                      description="Use simulated time"
+    )
+
     joy_teleop = Node(
-        package="teleop_twist_joy",
-        executable="teleop_node",
-        parameters=[joy_params],
-        remappings=[('/cmd_vel','/cmd_vel_joy')]
+        package="joy_teleop",
+        executable="joy_teleop",
+        parameters=[os.path.join(get_package_share_directory("alphabot_controller"), "config", "joy_teleop.yaml"),
+                    {"use_sim_time": LaunchConfiguration("use_sim_time")}],
     )
 
     joy_node = Node(
         package="joy",
         executable="joy_node",
         name="joystick",
-        parameters=[os.path.join(get_package_share_directory("alphabot_controller"), "config", "joy_config.yaml")]
+        parameters=[os.path.join(get_package_share_directory("alphabot_controller"), "config", "joy_config.yaml"),
+                    {"use_sim_time": LaunchConfiguration("use_sim_time")}]
     )
-
-    alphabot_controller_package = get_package_share_directory("alphabot_controller")
-
+    
     twist_mux_launch = IncludeLaunchDescription(
         os.path.join(
             get_package_share_directory("twist_mux"),
@@ -35,17 +39,27 @@ def generate_launch_description():
             "twist_mux_launch.py"
         ),
         launch_arguments={
-            "cmd_vel_out": "/alphabot_controller/cmd_vel_unstamped",
-            "config_topics": os.path.join(alphabot_controller_package,"config","twist_mux.yaml"),
-            # "config_locks":os.path.join(alphabot_controller_package,"config","twist_mux_lock.yaml"),
-            # "config_joy":os.path.join(alphabot_controller_package,"config","twist_mux_joy.yaml"),
-        }.items()
+            "cmd_vel_out": "alphabot_controller/cmd_vel_unstamped",
+            "config_locks": os.path.join(alphabot_controller_pkg, "config", "twist_mux_locks.yaml"),
+            "config_topics": os.path.join(alphabot_controller_pkg, "config", "twist_mux_topics.yaml"),
+            "config_joy": os.path.join(alphabot_controller_pkg, "config", "twist_mux_joy.yaml"),
+            "use_sim_time": LaunchConfiguration("use_sim_time"),
+        }.items(),
+    )
+
+    twist_relay_node = Node(
+        package="alphabot_controller",
+        executable="twist_relay",
+        name="twist_relay",
+        parameters=[{"use_sim_time": LaunchConfiguration("use_sim_time")}]
     )
 
     return LaunchDescription(
         [
+            use_sim_time_arg,
             joy_teleop,
             joy_node,
-            twist_mux_launch
+            twist_mux_launch,
+            twist_relay_node,
         ]
     )
