@@ -63,7 +63,7 @@ def generate_launch_description():
         [
             hardware_interface,
             controller,
-            # scanner,
+            scanner,
             twist_relay_node,
             twist_mux_launch,
             # robot_localization_launch,
