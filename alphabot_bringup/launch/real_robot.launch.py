@@ -9,6 +9,9 @@ from launch.conditions import IfCondition, UnlessCondition
 
 def generate_launch_description():
 
+    use_sim_time_arg = DeclareLaunchArgument(name="use_sim_time", default_value="False",
+                                      description="Use simulated time"
+    )
     use_slam = LaunchConfiguration("use_slam")
     alphabot_controller_pkg = get_package_share_directory('alphabot_controller')
 
@@ -91,6 +94,7 @@ def generate_launch_description():
 
     return LaunchDescription(
         [
+            use_sim_time_arg,
             use_slam_arg,
             hardware_interface,
             controller,

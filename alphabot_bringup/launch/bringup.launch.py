@@ -2,12 +2,16 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription
+from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
 from launch_ros.actions import Node
 from launch.substitutions import LaunchConfiguration
 
 
 def generate_launch_description():
+
+    use_sim_time_arg = DeclareLaunchArgument(name="use_sim_time", default_value="False",
+                                      description="Use simulated time"
+    )
 
     alphabot_controller_pkg = get_package_share_directory('alphabot_controller')
 
@@ -59,6 +63,7 @@ def generate_launch_description():
 
     return LaunchDescription(
         [
+            use_sim_time_arg,
             hardware_interface,
             controller,
             scanner,
