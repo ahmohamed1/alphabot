@@ -14,7 +14,11 @@ ros2 launch slam_toolbox online_async_launch.py params_file:=src/alphabot/alphab
 ```bash
 ros2 launch nav2_bringup navigation_launch.py use_sim_time:=false
 ```
+## Save the map
 
+```bash
+ros2 run nav2_map_server map_saver_cli -f my_map
+```
 ## Loading an Existing Map
 To load an existing map, modify the mapper_params_online_async.yaml file:
 

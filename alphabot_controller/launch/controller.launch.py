@@ -63,6 +63,7 @@ def generate_launch_description():
 
     return LaunchDescription(
         [
+            use_sim_time,
             use_sim_time_arg,
             joint_state_broadcaster_spawner,
             wheel_controller_spawner,

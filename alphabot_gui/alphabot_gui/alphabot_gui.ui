@@ -1,0 +1,653 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Alphabot GUI</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QTabWidget" name="tabWidget">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>30</y>
+      <width>801</width>
+      <height>431</height>
+     </rect>
+    </property>
+    <property name="currentIndex">
+     <number>2</number>
+    </property>
+    <widget class="QWidget" name="tab">
+     <attribute name="title">
+      <string>Manual Control</string>
+     </attribute>
+     <widget class="QSplitter" name="splitter">
+      <property name="geometry">
+       <rect>
+        <x>70</x>
+        <y>310</y>
+        <width>311</width>
+        <height>41</height>
+       </rect>
+      </property>
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <widget class="QLabel" name="label_2">
+       <property name="styleSheet">
+        <string notr="true">QLabel {
+    font: bold 14pt &quot;Segoe UI&quot;;
+    color: #333;
+}
+</string>
+       </property>
+       <property name="text">
+        <string>Speed</string>
+       </property>
+      </widget>
+      <widget class="QSlider" name="HSSpeed">
+       <property name="styleSheet">
+        <string notr="true">QSlider::groove:horizontal {
+    border: 1px solid #bbb;
+    height: 10px;
+    background: #e0e0e0;
+    border-radius: 5px;
+}
+
+QSlider::sub-page:horizontal {
+    background: #00cc44;
+    border: 1px solid #777;
+    height: 10px;
+    border-radius: 5px;
+}
+
+QSlider::add-page:horizontal {
+    background: #ccc;
+    border: 1px solid #777;
+    height: 10px;
+    border-radius: 5px;
+}
+
+QSlider::handle:horizontal {
+    background: #00aa33;
+    border: 1px solid #5c5c5c;
+    width: 18px;
+    margin: -5px 0;
+    border-radius: 9px;
+}
+
+QSlider::handle:horizontal:hover {
+    background: #009933;
+}
+</string>
+       </property>
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+      </widget>
+     </widget>
+     <widget class="QWidget" name="">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>20</y>
+        <width>411</width>
+        <height>281</height>
+       </rect>
+      </property>
+      <layout class="QGridLayout" name="gridLayout">
+       <item row="0" column="1">
+        <widget class="QPushButton" name="PBForward">
+         <property name="styleSheet">
+          <string notr="true">QPushButton {
+    background-color: #4CAF50; /* Default green */
+    color: white;
+    font: bold 13pt &quot;Segoe UI&quot;;
+    border: none;
+    border-radius: 10px;
+    padding: 10px;
+    min-width: 80px;
+    min-height: 50px;
+}
+
+QPushButton:hover {
+    background-color: #45a049;
+}
+
+QPushButton:pressed {
+    background-color: #2e7031;
+}
+</string>
+         </property>
+         <property name="text">
+          <string>Forward</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QPushButton" name="PBRight">
+         <property name="styleSheet">
+          <string notr="true">QPushButton {
+    background-color: #FF9800; /* Default green */
+    color: white;
+    font: bold 13pt &quot;Segoe UI&quot;;
+    border: none;
+    border-radius: 10px;
+    padding: 10px;
+    min-width: 80px;
+    min-height: 50px;
+}
+
+QPushButton:hover {
+    background-color: #45a049;
+}
+
+QPushButton:pressed {
+    background-color: #2e7031;
+}
+</string>
+         </property>
+         <property name="text">
+          <string>Right</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QPushButton" name="PBStop">
+         <property name="styleSheet">
+          <string notr="true">QPushButton {
+    background-color: #F44336; /* Default green */
+    color: white;
+    font: bold 13pt &quot;Segoe UI&quot;;
+    border: none;
+    border-radius: 10px;
+    padding: 10px;
+    min-width: 80px;
+    min-height: 50px;
+}
+
+QPushButton:hover {
+    background-color: #45a049;
+}
+
+QPushButton:pressed {
+    background-color: #2e7031;
+}
+</string>
+         </property>
+         <property name="text">
+          <string>Stop</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="2">
+        <widget class="QPushButton" name="PBLeft">
+         <property name="styleSheet">
+          <string notr="true">QPushButton {
+    background-color: 	#FF9800; /* Default green */
+    color: white;
+    font: bold 13pt &quot;Segoe UI&quot;;
+    border: none;
+    border-radius: 10px;
+    padding: 10px;
+    min-width: 80px;
+    min-height: 50px;
+}
+
+QPushButton:hover {
+    background-color: #45a049;
+}
+
+QPushButton:pressed {
+    background-color: #2e7031;
+}
+</string>
+         </property>
+         <property name="text">
+          <string>Left</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QPushButton" name="PBBackWord">
+         <property name="styleSheet">
+          <string notr="true">QPushButton {
+    background-color: #2196F3; /* Default green */
+    color: white;
+    font: bold 12pt &quot;Segoe UI&quot;;
+    border: none;
+    border-radius: 10px;
+    padding: 10px;
+    min-width: 80px;
+    min-height: 50px;
+}
+
+QPushButton:hover {
+    background-color: #45a049;
+}
+
+QPushButton:pressed {
+    background-color: #2e7031;
+}
+</string>
+         </property>
+         <property name="text">
+          <string>BackWord</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="tab_2">
+     <attribute name="title">
+      <string>Go To Location</string>
+     </attribute>
+     <widget class="QLabel" name="label_3">
+      <property name="geometry">
+       <rect>
+        <x>40</x>
+        <y>0</y>
+        <width>201</width>
+        <height>51</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QLabel {
+    font: bold 11pt &quot;Segoe UI&quot;;
+    color: #333;
+}</string>
+      </property>
+      <property name="text">
+       <string>Saved Locations</string>
+      </property>
+     </widget>
+     <widget class="QListWidget" name="listWidget">
+      <property name="geometry">
+       <rect>
+        <x>40</x>
+        <y>50</y>
+        <width>256</width>
+        <height>192</height>
+       </rect>
+      </property>
+      <item>
+       <property name="text">
+        <string>Kitchen</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>Office</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>Living Room</string>
+       </property>
+      </item>
+     </widget>
+     <widget class="QPushButton" name="PBAddNewLocation">
+      <property name="geometry">
+       <rect>
+        <x>40</x>
+        <y>250</y>
+        <width>124</width>
+        <height>41</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QPushButton {
+    background-color: #0078D7;       /* Windows blue */
+    color: white;
+    font: bold 12pt &quot;Segoe UI&quot;;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    min-width: 100px;
+}
+
+QPushButton:hover {
+    background-color: #005fa3;
+}
+
+QPushButton:pressed {
+    background-color: #004c87;
+}
+</string>
+      </property>
+      <property name="text">
+       <string>Add</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="PBEditLocation">
+      <property name="geometry">
+       <rect>
+        <x>170</x>
+        <y>250</y>
+        <width>124</width>
+        <height>41</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QPushButton {
+    background-color: #ffc107;       /* Windows blue */
+    color: white;
+    font: bold 12pt &quot;Segoe UI&quot;;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    min-width: 100px;
+}
+
+QPushButton:hover {
+    background-color: #005fa3;
+}
+
+QPushButton:pressed {
+    background-color: #004c87;
+}
+</string>
+      </property>
+      <property name="text">
+       <string>Edit</string>
+      </property>
+     </widget>
+     <widget class="QFrame" name="frame">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>10</y>
+        <width>301</width>
+        <height>291</height>
+       </rect>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::StyledPanel</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Raised</enum>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="pushButton">
+      <property name="geometry">
+       <rect>
+        <x>30</x>
+        <y>310</y>
+        <width>191</width>
+        <height>81</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QPushButton {
+    background-color: #28a745;       /* Windows blue */
+    color: white;
+    font: bold 12pt &quot;Segoe UI&quot;;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    min-width: 100px;
+}
+
+QPushButton:hover {
+    background-color: #005fa3;
+}
+
+QPushButton:pressed {
+    background-color: #004c87;
+}
+</string>
+      </property>
+      <property name="text">
+       <string>Start Navigation</string>
+      </property>
+     </widget>
+     <widget class="QFrame" name="frame_2">
+      <property name="geometry">
+       <rect>
+        <x>400</x>
+        <y>10</y>
+        <width>291</width>
+        <height>291</height>
+       </rect>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::StyledPanel</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Raised</enum>
+      </property>
+     </widget>
+     <widget class="QWidget" name="">
+      <property name="geometry">
+       <rect>
+        <x>270</x>
+        <y>330</y>
+        <width>461</width>
+        <height>46</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QLabel" name="label_4">
+         <property name="styleSheet">
+          <string notr="true">QLabel {
+    font: bold 11pt &quot;Segoe UI&quot;;
+    color: #333;
+}</string>
+         </property>
+         <property name="text">
+          <string>Or enter coordicates: </string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_5">
+         <property name="styleSheet">
+          <string notr="true">QLabel {
+    font: bold 11pt &quot;Segoe UI&quot;;
+    color: #333;
+}</string>
+         </property>
+         <property name="text">
+          <string>X:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QTextEdit" name="TEX_coordinate">
+         <property name="styleSheet">
+          <string notr="true">QTextEdit {
+    border: 2px solid #ccc;
+    border-radius: 6px;
+    padding: 6px;
+    font: 11pt &quot;Segoe UI&quot;;
+    background-color: #ffffff;
+    color: #333;
+    min-height: 28px;
+    max-height: 28px;
+	min-width: 34px;
+    max-width: 34px;
+}
+</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_6">
+         <property name="styleSheet">
+          <string notr="true">QLabel {
+    font: bold 11pt &quot;Segoe UI&quot;;
+    color: #333;
+}</string>
+         </property>
+         <property name="text">
+          <string>Y:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QTextEdit" name="TEY_coordinate_2">
+         <property name="styleSheet">
+          <string notr="true">QTextEdit {
+    border: 2px solid #ccc;
+    border-radius: 6px;
+    padding: 6px;
+    font: 11pt &quot;Segoe UI&quot;;
+    background-color: #ffffff;
+    color: #333;
+    min-height: 28px;
+    max-height: 28px;
+	min-width: 34px;
+    max-width: 34px;
+}
+</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_7">
+         <property name="styleSheet">
+          <string notr="true">QLabel {
+    font: bold 11pt &quot;Segoe UI&quot;;
+    color: #333;
+}</string>
+         </property>
+         <property name="text">
+          <string>Θ:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QTextEdit" name="TETheta_coordinate_3">
+         <property name="styleSheet">
+          <string notr="true">QTextEdit {
+    border: 2px solid #ccc;
+    border-radius: 6px;
+    padding: 6px;
+    font: 11pt &quot;Segoe UI&quot;;
+    background-color: #ffffff;
+    color: #333;
+    min-height: 28px;
+    max-height: 28px;
+	min-width: 34px;
+    max-width: 34px;
+}
+</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="tab_3">
+     <attribute name="title">
+      <string>Build Map</string>
+     </attribute>
+    </widget>
+    <widget class="QWidget" name="tab_4">
+     <attribute name="title">
+      <string>Configuration</string>
+     </attribute>
+    </widget>
+   </widget>
+   <widget class="QPushButton" name="pbEmergencyStop">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>470</y>
+      <width>171</width>
+      <height>81</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QPushButton {
+    background-color: red;
+    color: yellow;
+    font-size: 12pt;
+    font-weight: bold;
+    border: none;
+    border-radius: 40px;
+    padding: 0px;
+}
+
+QPushButton:hover {
+    background-color: darkred;
+}
+</string>
+    </property>
+    <property name="text">
+     <string>Emergency Stop</string>
+    </property>
+   </widget>
+   <widget class="QProgressBar" name="PBBattryLevel">
+    <property name="geometry">
+     <rect>
+      <x>570</x>
+      <y>490</y>
+      <width>211</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QProgressBar {
+    border: 2px solid #555;
+    border-radius: 10px;
+    text-align: center;
+    font: bold 14px;
+    color: black;
+    background-color: #eee;
+}
+
+QProgressBar::chunk {
+    background-color: #00cc44;  /* Green color */
+    border-radius: 10px;
+    margin: 1px;
+}
+</string>
+    </property>
+    <property name="value">
+     <number>60</number>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>0</y>
+      <width>111</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>ROBOT STATUS</string>
+    </property>
+    <property name="textFormat">
+     <enum>Qt::PlainText</enum>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>800</width>
+     <height>20</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
