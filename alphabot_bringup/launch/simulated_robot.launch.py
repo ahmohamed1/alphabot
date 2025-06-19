@@ -8,6 +8,8 @@ from ament_index_python.packages import get_package_share_directory
 
 
 def generate_launch_description():
+    alphabot_controller_pkg = get_package_share_directory('alphabot_controller')
+
     use_slam = LaunchConfiguration("use_slam")
 
     use_slam_arg = DeclareLaunchArgument(
@@ -35,15 +37,36 @@ def generate_launch_description():
         }.items(),
     )
     
-    joystick = IncludeLaunchDescription(
+    # joystick = IncludeLaunchDescription(
+    #     os.path.join(
+    #         get_package_share_directory("alphabot_controller"),
+    #         "launch",
+    #         "joystick_teleop.launch.py"
+    #     ),
+    #     launch_arguments={
+    #         "use_sim_time": "True"
+    #     }.items()
+    # )
+    twist_mux_launch = IncludeLaunchDescription(
         os.path.join(
-            get_package_share_directory("alphabot_controller"),
+            get_package_share_directory("twist_mux"),
             "launch",
-            "joystick_teleop.launch.py"
+            "twist_mux_launch.py"
         ),
         launch_arguments={
-            "use_sim_time": "True"
-        }.items()
+            "cmd_vel_out": "alphabot_controller/cmd_vel_unstamped",
+            "config_locks": os.path.join(alphabot_controller_pkg, "config", "twist_mux_locks.yaml"),
+            "config_topics": os.path.join(alphabot_controller_pkg, "config", "twist_mux_topics.yaml"),
+            "config_joy": os.path.join(alphabot_controller_pkg, "config", "twist_mux_joy.yaml"),
+            "use_sim_time": LaunchConfiguration("use_sim_time"),
+        }.items(),
+    )
+
+    twist_relay_node = Node(
+        package="alphabot_controller",
+        executable="twist_relay",
+        name="twist_relay",
+        parameters=[{"use_sim_time": LaunchConfiguration("use_sim_time")}]
     )
 
     localization = IncludeLaunchDescription(
@@ -82,7 +105,7 @@ def generate_launch_description():
         ],
         output="screen",
         parameters=[{"use_sim_time": True}],
-        condition=UnlessCondition(use_slam)
+        # condition=UnlessCondition(use_slam)
     )
 
     # rviz_slam = Node(
@@ -103,7 +126,9 @@ def generate_launch_description():
         use_slam_arg,
         gazebo,
         controller,
-        joystick,
+        # joystick,
+        twist_relay_node,
+        twist_mux_launch,
         localization,
         slam,
         navigation,
