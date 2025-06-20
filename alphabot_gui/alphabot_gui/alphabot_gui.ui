@@ -24,7 +24,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>2</number>
+     <number>0</number>
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
@@ -95,7 +95,7 @@ QSlider::handle:horizontal:hover {
        </property>
       </widget>
      </widget>
-     <widget class="QWidget" name="">
+     <widget class="QWidget" name="layoutWidget">
       <property name="geometry">
        <rect>
         <x>20</x>
@@ -255,7 +255,7 @@ QPushButton:pressed {
      <widget class="QLabel" name="label_3">
       <property name="geometry">
        <rect>
-        <x>40</x>
+        <x>70</x>
         <y>0</y>
         <width>201</width>
         <height>51</height>
@@ -274,7 +274,7 @@ QPushButton:pressed {
      <widget class="QListWidget" name="listWidget">
       <property name="geometry">
        <rect>
-        <x>40</x>
+        <x>70</x>
         <y>50</y>
         <width>256</width>
         <height>192</height>
@@ -299,7 +299,7 @@ QPushButton:pressed {
      <widget class="QPushButton" name="PBAddNewLocation">
       <property name="geometry">
        <rect>
-        <x>40</x>
+        <x>70</x>
         <y>250</y>
         <width>124</width>
         <height>41</height>
@@ -332,7 +332,7 @@ QPushButton:pressed {
      <widget class="QPushButton" name="PBEditLocation">
       <property name="geometry">
        <rect>
-        <x>170</x>
+        <x>200</x>
         <y>250</y>
         <width>124</width>
         <height>41</height>
@@ -365,10 +365,10 @@ QPushButton:pressed {
      <widget class="QFrame" name="frame">
       <property name="geometry">
        <rect>
-        <x>20</x>
+        <x>50</x>
         <y>10</y>
-        <width>301</width>
-        <height>291</height>
+        <width>300</width>
+        <height>290</height>
        </rect>
       </property>
       <property name="frameShape">
@@ -414,10 +414,10 @@ QPushButton:pressed {
      <widget class="QFrame" name="frame_2">
       <property name="geometry">
        <rect>
-        <x>400</x>
+        <x>430</x>
         <y>10</y>
-        <width>291</width>
-        <height>291</height>
+        <width>300</width>
+        <height>290</height>
        </rect>
       </property>
       <property name="frameShape">
@@ -426,8 +426,27 @@ QPushButton:pressed {
       <property name="frameShadow">
        <enum>QFrame::Raised</enum>
       </property>
+      <widget class="QLabel" name="label_8">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>0</y>
+         <width>201</width>
+         <height>51</height>
+        </rect>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QLabel {
+    font: bold 11pt &quot;Segoe UI&quot;;
+    color: #333;
+}</string>
+       </property>
+       <property name="text">
+        <string>Map Preview</string>
+       </property>
+      </widget>
      </widget>
-     <widget class="QWidget" name="">
+     <widget class="QWidget" name="layoutWidget">
       <property name="geometry">
        <rect>
         <x>270</x>
@@ -548,11 +567,221 @@ QPushButton:pressed {
        </item>
       </layout>
      </widget>
+     <zorder>frame</zorder>
+     <zorder>label_3</zorder>
+     <zorder>listWidget</zorder>
+     <zorder>PBAddNewLocation</zorder>
+     <zorder>PBEditLocation</zorder>
+     <zorder>pushButton</zorder>
+     <zorder>frame_2</zorder>
+     <zorder>layoutWidget</zorder>
     </widget>
     <widget class="QWidget" name="tab_3">
      <attribute name="title">
       <string>Build Map</string>
      </attribute>
+     <widget class="QPushButton" name="PBStartMapping">
+      <property name="geometry">
+       <rect>
+        <x>450</x>
+        <y>50</y>
+        <width>151</width>
+        <height>61</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QPushButton {
+    background-color: #0078D7;       /* Windows blue */
+    color: white;
+    font: bold 12pt &quot;Segoe UI&quot;;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    min-width: 100px;
+}
+
+QPushButton:hover {
+    background-color: #005fa3;
+}
+
+QPushButton:pressed {
+    background-color: #004c87;
+}
+</string>
+      </property>
+      <property name="text">
+       <string>Start Mapping</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="PBPause">
+      <property name="geometry">
+       <rect>
+        <x>630</x>
+        <y>50</y>
+        <width>151</width>
+        <height>61</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QPushButton {
+    background-color: #0078D7;       /* Windows blue */
+    color: white;
+    font: bold 12pt &quot;Segoe UI&quot;;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    min-width: 100px;
+}
+
+QPushButton:hover {
+    background-color: #005fa3;
+}
+
+QPushButton:pressed {
+    background-color: #004c87;
+}
+</string>
+      </property>
+      <property name="text">
+       <string>Pause</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="PBSaveMap">
+      <property name="geometry">
+       <rect>
+        <x>450</x>
+        <y>140</y>
+        <width>151</width>
+        <height>61</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QPushButton {
+    background-color: #0078D7;       /* Windows blue */
+    color: white;
+    font: bold 12pt &quot;Segoe UI&quot;;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    min-width: 100px;
+}
+
+QPushButton:hover {
+    background-color: #005fa3;
+}
+
+QPushButton:pressed {
+    background-color: #004c87;
+}
+</string>
+      </property>
+      <property name="text">
+       <string>Save Map</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="PBLoadMap">
+      <property name="geometry">
+       <rect>
+        <x>630</x>
+        <y>140</y>
+        <width>151</width>
+        <height>61</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QPushButton {
+    background-color: #0078D7;       /* Windows blue */
+    color: white;
+    font: bold 12pt &quot;Segoe UI&quot;;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    min-width: 100px;
+}
+
+QPushButton:hover {
+    background-color: #005fa3;
+}
+
+QPushButton:pressed {
+    background-color: #004c87;
+}
+</string>
+      </property>
+      <property name="text">
+       <string>Load Map</string>
+      </property>
+     </widget>
+     <widget class="QFrame" name="frame_3">
+      <property name="geometry">
+       <rect>
+        <x>40</x>
+        <y>30</y>
+        <width>381</width>
+        <height>331</height>
+       </rect>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::StyledPanel</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Raised</enum>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_9">
+      <property name="geometry">
+       <rect>
+        <x>450</x>
+        <y>230</y>
+        <width>151</width>
+        <height>41</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QLabel {
+    font: bold 11pt &quot;Segoe UI&quot;;
+    color: #333;
+}
+</string>
+      </property>
+      <property name="text">
+       <string>Exploration Mode</string>
+      </property>
+     </widget>
+     <widget class="QRadioButton" name="radioButton">
+      <property name="geometry">
+       <rect>
+        <x>450</x>
+        <y>270</y>
+        <width>99</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Manual</string>
+      </property>
+     </widget>
+     <widget class="QRadioButton" name="radioButton_2">
+      <property name="geometry">
+       <rect>
+        <x>540</x>
+        <y>270</y>
+        <width>99</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Automate</string>
+      </property>
+     </widget>
+     <zorder>frame_3</zorder>
+     <zorder>PBStartMapping</zorder>
+     <zorder>PBPause</zorder>
+     <zorder>PBSaveMap</zorder>
+     <zorder>PBLoadMap</zorder>
+     <zorder>label_9</zorder>
+     <zorder>radioButton</zorder>
+     <zorder>radioButton_2</zorder>
     </widget>
     <widget class="QWidget" name="tab_4">
      <attribute name="title">
