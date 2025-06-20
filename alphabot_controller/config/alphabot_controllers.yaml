@@ -59,8 +59,8 @@ alphabot_controller:
     angular:
       z:
         has_velocity_limits    : true
-        max_velocity           : 3.0  # rad/s
+        max_velocity           : 1.2 # rad/s
         has_acceleration_limits: true
-        max_acceleration       : 1.5  # rad/s^2
+        max_acceleration       : 0.8  # rad/s^2
         has_jerk_limits        : false
         max_jerk               : 2.5  # rad/s^3

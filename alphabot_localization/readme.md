@@ -7,7 +7,7 @@ To build a map using SLAM Toolbox, you need to copy the `mapper_parameters` and 
 To build the map, you can run the following command:
 
 ```bash
-ros2 launch slam_toolbox online_async_launch.py params_file:=src/alphabot/alphabot_localization/config/mapper_params_online_async.yaml use_sim_time:=false
+ros2 launch slam_toolbox online_async_launch.py params_file:=src/alphabot/alphabot_mapping/config/mapper_params_online_async.yaml use_sim_time:=false
 ```
 ### option: to run nav2 alongside of slam 
 
