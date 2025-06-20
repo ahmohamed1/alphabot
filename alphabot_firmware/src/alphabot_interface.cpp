@@ -193,6 +193,7 @@ hardware_interface::return_type AlphabotInterface::read(const rclcpp::Time &,
     std::stringstream ss(message);
     std::string res;
     int multiplier = 1;
+    // RCLCPP_INFO(rclcpp::get_logger("AlphabotInterface"), "Received: %s", message.c_str());
     while(std::getline(ss, res, ','))
     {
       multiplier = res.at(1) == 'p' ? 1 : -1;
@@ -201,11 +202,13 @@ hardware_interface::return_type AlphabotInterface::read(const rclcpp::Time &,
       {
         velocity_states_.at(0) = multiplier * std::stod(res.substr(2, res.size()));
         position_states_.at(0) += velocity_states_.at(0) * dt;
+        // RCLCPP_INFO(rclcpp::get_logger("AlphabotInterface"), "Right Wheel Position: %f", position_states_.at(0));
       }
       else if(res.at(0) == 'l')
       {
         velocity_states_.at(1) = multiplier * std::stod(res.substr(2, res.size()));
         position_states_.at(1) += velocity_states_.at(1) * dt;
+        // RCLCPP_INFO(rclcpp::get_logger("AlphabotInterface"), "Left Wheel Position: %f", position_states_.at(1));
       }
     }
     last_run_ = rclcpp::Clock().now();
