@@ -24,7 +24,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>1</number>
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
@@ -246,6 +246,16 @@ QPushButton:pressed {
         </widget>
        </item>
       </layout>
+     </widget>
+     <widget class="QGraphicsView" name="GVController">
+      <property name="geometry">
+       <rect>
+        <x>510</x>
+        <y>50</y>
+        <width>200</width>
+        <height>200</height>
+       </rect>
+      </property>
      </widget>
     </widget>
     <widget class="QWidget" name="tab_2">
@@ -871,7 +881,7 @@ QProgressBar::chunk {
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>20</height>
+     <height>24</height>
     </rect>
    </property>
   </widget>
