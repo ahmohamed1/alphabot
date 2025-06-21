@@ -60,6 +60,26 @@ def generate_launch_description():
         parameters=[{"use_sim_time": LaunchConfiguration("use_sim_time")}]
     )
 
+    robot_localization_launch = Node(
+        package="robot_localization",
+        executable="ekf_node",
+        name="ekf_filter_node",
+        output="screen",
+        parameters=[os.path.join(
+            get_package_share_directory("alphabot_localization"),
+            "config",
+            "ekf.yaml"
+        ),
+            {"use_sim_time": False}
+            ]
+    )
+
+    imu_driver_node = Node(
+        package="alphabot_firmware",
+        executable="mpu6050_driver.py"
+    )
+
+
 
     return LaunchDescription(
         [
@@ -69,6 +89,7 @@ def generate_launch_description():
             scanner,
             twist_relay_node,
             twist_mux_launch,
-            # robot_localization_launch,
+            robot_localization_launch,
+            imu_driver_node,
         ]
     )

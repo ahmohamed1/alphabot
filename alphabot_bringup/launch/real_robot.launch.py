@@ -72,7 +72,8 @@ def generate_launch_description():
             "launch",
             "global_localization.launch.py"
         ),
-        condition=UnlessCondition(use_slam)
+        condition=UnlessCondition(use_slam),
+        launch_arguments={"use_sim_time": "false"}.items()
     )
 
     slam = IncludeLaunchDescription(
@@ -81,7 +82,8 @@ def generate_launch_description():
             "launch",
             "slam.launch.py"
         ),
-        condition=IfCondition(use_slam)
+        condition=IfCondition(use_slam),
+        launch_arguments={"use_sim_time": "false"}.items()
     )
 
     navigation = IncludeLaunchDescription(
@@ -89,7 +91,8 @@ def generate_launch_description():
             get_package_share_directory("alphabot_navigation"),
             "launch",
             "navigation.launch.py"
-        )
+        ),
+        launch_arguments={"use_sim_time": "false"}.items()
     )
 
     robot_localization_launch = Node(
@@ -107,7 +110,7 @@ def generate_launch_description():
 
 
     delayed_launch = TimerAction(
-        period= 30.0,  # Adjust seconds as needed
+        period= 60.0,  # Adjust seconds as needed
         actions=[
             slam,
             navigation,

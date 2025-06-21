@@ -1,6 +1,6 @@
 controller_manager:
   ros__parameters:
-    update_rate: 30 # Hz
+    update_rate: 10 # Hz
 
     alphabot_controller:
       type: diff_drive_controller/DiffDriveController
@@ -18,7 +18,7 @@ alphabot_controller:
     left_wheel_names  : ['wheel_left_joint']
     right_wheel_names : ['wheel_right_joint']
 
-    publish_rate: 30.0               # default: 50
+    publish_rate: 10.0               # default: 50
     pose_covariance_diagonal : [0.001, 0.001, 1.0e-3, 1.0e-3, 1.0e-3, 0.01]
     twist_covariance_diagonal: [0.001, 0.001, 1.0e-3, 1.0e-3, 1.0e-3, 0.01]
 
