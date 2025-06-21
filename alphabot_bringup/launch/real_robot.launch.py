@@ -6,6 +6,8 @@ from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
 from launch_ros.actions import Node
 from launch.substitutions import LaunchConfiguration
 from launch.conditions import IfCondition, UnlessCondition
+from launch.actions import TimerAction
+
 
 def generate_launch_description():
 
@@ -87,11 +89,30 @@ def generate_launch_description():
             get_package_share_directory("alphabot_navigation"),
             "launch",
             "navigation.launch.py"
-        ),
+        )
     )
 
-    
+    robot_localization_launch = Node(
+        package="robot_localization",
+        executable="ekf_node",
+        name="ekf_filter_node",
+        output="screen",
+        parameters=[{"use_sim_time": False}]
+    )
 
+    imu_driver_node = Node(
+        package="alphabot_firmware",
+        executable="mpu6050_driver.py"
+    )
+
+
+    delayed_launch = TimerAction(
+        period= 30.0,  # Adjust seconds as needed
+        actions=[
+            slam,
+            navigation,
+        ]
+    )
     return LaunchDescription(
         [
             use_sim_time_arg,
@@ -102,8 +123,8 @@ def generate_launch_description():
             twist_relay_node,
             twist_mux_launch,
             localization,
-            slam,
-            navigation
+            delayed_launch,
             # robot_localization_launch,
+            # imu_driver_node,
         ]
     )

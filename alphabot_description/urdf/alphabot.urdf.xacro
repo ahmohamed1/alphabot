@@ -43,14 +43,14 @@
         <visual>
             <origin xyz="0.0 0.0 0.06" rpy="0.0 0.0 0.0"/>
             <geometry>
-                <box size="0.256 0.256 ${robot_height}"/>
+                <box size="0.256 ${robot_width} ${robot_height}"/>
             </geometry>
             <material name="white"/>
         </visual>
         <collision>
             <origin xyz="0.0 0.0 0.06" rpy="0.0 0.0 0.0"/>
             <geometry>
-                <box size="0.256 0.256 ${robot_height}"/>
+                <box size="0.256 ${robot_width} ${robot_height}"/>
             </geometry>
         </collision>
     </link>
@@ -114,7 +114,7 @@
         </collision>
     </link>
 
-    <!-- <link name="caster_rear_link">
+    <link name="caster_rear_link">
         <inertial>
             <mass value="0.05"/>
             <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
@@ -131,7 +131,7 @@
                 <sphere radius="${caster_wheel}"/>
             </geometry>
         </collision>
-    </link> -->
+    </link>
 
     <!-- Define the joints -->
     <joint name="base_joint" type="fixed">
@@ -158,15 +158,15 @@
         <parent link="base_link"/>
         <child link="caster_front_link"/>
         <axis xyz="0.0 1.0 0.0"/>
-        <origin xyz="-0.08 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <origin xyz="-0.08 0.08 -0.01" rpy="0.0 0.0 0.0"/>
     </joint>
     
-    <!-- <joint name="caster_rear_joint" type="fixed">
+    <joint name="caster_rear_joint" type="fixed">
         <parent link="base_link"/>
         <child link="caster_rear_link"/>
         <axis xyz="0.0 1.0 0.0"/>
-        <origin xyz="-0.08 0.08 0.0" rpy="0.0 0.0 0.0"/>
-    </joint> -->
+        <origin xyz="-0.08 -0.08 -0.01" rpy="0.0 0.0 0.0"/>
+    </joint>
 
 
     <link name="laser_link">
