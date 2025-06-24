@@ -110,7 +110,7 @@ def generate_launch_description():
 
 
     delayed_launch = TimerAction(
-        period= 60.0,  # Adjust seconds as needed
+        period= 30.0,  # Adjust seconds as needed
         actions=[
             slam,
             navigation,
@@ -127,7 +127,7 @@ def generate_launch_description():
             twist_mux_launch,
             localization,
             delayed_launch,
-            # robot_localization_launch,
-            # imu_driver_node,
+            robot_localization_launch,
+            imu_driver_node,
         ]
     )

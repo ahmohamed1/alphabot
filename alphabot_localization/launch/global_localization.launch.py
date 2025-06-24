@@ -39,7 +39,6 @@ def generate_launch_description():
         map_name,
         "map.yaml"
     ])
-    print ("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA ", map_path)
     
     nav2_map_server = Node(
         package="nav2_map_server",
