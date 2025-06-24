@@ -18,8 +18,8 @@ def generate_launch_description():
         default_value="true"
     )
 
-    lifecycle_nodes = ["controller_server", "planner_server", "smoother_server",
-                       "bt_navigator","behavior_server"]
+    lifecycle_nodes = ["controller_server", "waypoint_follower" ,"planner_server", "smoother_server",
+                       "velocity_smoother", "bt_navigator","behavior_server"]
 
     nav2_controller_server = Node(
         package="nav2_controller",
@@ -33,7 +33,23 @@ def generate_launch_description():
             {"use_sim_time": use_sim_time}
         ],
     )
-    
+
+    nav2_waypoint_follower_server = Node(
+        package="nav2_waypoint_follower",
+        executable="waypoint_follower",
+        name="waypoint_follower",
+        output="screen",
+        parameters=[
+            os.path.join(
+                alphabot_navigation_pkg,
+                "config",
+                "waypoint_follower.yaml"),
+            {"use_sim_time": use_sim_time}
+        ],
+    )
+
+      
+
     nav2_planner_server = Node(
         package="nav2_planner",
         executable="planner_server",
@@ -58,6 +74,20 @@ def generate_launch_description():
                 alphabot_navigation_pkg,
                 "config",
                 "smoother_server.yaml"),
+            {"use_sim_time": use_sim_time}
+        ],
+    )
+
+    nav2_velocity_smoother_server = Node(
+        package="nav2_velocity_smoother",
+        executable="velocity_smoother",
+        name="velocity_smoother",
+        output="screen",
+        parameters=[
+            os.path.join(
+                alphabot_navigation_pkg,
+                "config",
+                "velocity_smoother.yaml"),
             {"use_sim_time": use_sim_time}
         ],
     )
@@ -105,8 +135,10 @@ def generate_launch_description():
     return LaunchDescription([
         use_sim_time_arg,
         nav2_controller_server,
+        nav2_waypoint_follower_server,
         nav2_planner_server,
         nav2_smoother_server,
+        nav2_velocity_smoother_server,
         nav2_bt_navigator,
         nav2_behaviors,
         nav2_lifecycle_manager,
