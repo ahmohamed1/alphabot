@@ -14,3 +14,7 @@ twist_mux:
         topic   : cmd_vel
         timeout : 0.5
         priority: 80
+      abs_move: 
+        topic   : abs_move_vel
+        timeout : 0.5
+        priority: 70

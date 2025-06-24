@@ -24,6 +24,13 @@ AlphabotInterface::~AlphabotInterface()
                           "Something went wrong while closing connection with port " << port_);
     }
   }
+  if (node_) {
+    rclcpp::shutdown();  // Important to shutdown
+  }
+
+  if (spinner_thread_.joinable()) {
+    spinner_thread_.join();
+  }
 }
 
 
@@ -53,6 +60,12 @@ CallbackReturn AlphabotInterface::on_init(const hardware_interface::HardwareInfo
     velocity_commands_.reserve(info_.joints.size());
     position_states_.reserve(info_.joints.size());
     velocity_states_.reserve(info_.joints.size());
+    node_ = rclcpp::Node::make_shared("alphabot_hw_node");
+
+    battery_pub_ = node_->create_publisher<std_msgs::msg::Float32>("battery_voltage", 10);
+    spinner_thread_ = std::thread([this](){
+      rclcpp::spin(node_);
+    });
 
     return CallbackReturn::SUCCESS;
 }
@@ -193,6 +206,7 @@ hardware_interface::return_type AlphabotInterface::read(const rclcpp::Time &,
     std::stringstream ss(message);
     std::string res;
     int multiplier = 1;
+    // RCLCPP_INFO(rclcpp::get_logger("AlphabotInterface"), "Received: %s", message.c_str());
     while(std::getline(ss, res, ','))
     {
       multiplier = res.at(1) == 'p' ? 1 : -1;
@@ -201,11 +215,19 @@ hardware_interface::return_type AlphabotInterface::read(const rclcpp::Time &,
       {
         velocity_states_.at(0) = multiplier * std::stod(res.substr(2, res.size()));
         position_states_.at(0) += velocity_states_.at(0) * dt;
+        // RCLCPP_INFO(rclcpp::get_logger("AlphabotInterface"), "Right Wheel Position: %f", position_states_.at(0));
       }
       else if(res.at(0) == 'l')
       {
         velocity_states_.at(1) = multiplier * std::stod(res.substr(2, res.size()));
         position_states_.at(1) += velocity_states_.at(1) * dt;
+        // RCLCPP_INFO(rclcpp::get_logger("AlphabotInterface"), "Left Wheel Position: %f", position_states_.at(1));
+      }else if (res.at(0) == 'v')
+      {
+        float voltage = std::stof(res.substr(1));
+        std_msgs::msg::Float32 msg;
+        msg.data = voltage;
+        battery_pub_->publish(msg);
       }
     }
     last_run_ = rclcpp::Clock().now();

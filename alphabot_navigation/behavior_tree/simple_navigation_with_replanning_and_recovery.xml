@@ -9,9 +9,9 @@
         <FollowPath controller_id="FollowPath" path="{path}"/>
       </PipelineSequence>
       <Sequence>
-        <Spin spin_dist="1.57"/>
+        <Spin spin_dist="6.2319"/>
         <Wait wait_duration="5"/>
-        <BackUp backup_dist="0.3" backup_speed="0.15"/>
+        <BackUp backup_dist="0.3" backup_speed="0.12"/>
       </Sequence>
     </RecoveryNode>
   </BehaviorTree>
