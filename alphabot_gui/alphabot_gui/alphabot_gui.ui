@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
+    <width>781</width>
     <height>600</height>
    </rect>
   </property>
@@ -24,7 +24,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>0</number>
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
@@ -33,8 +33,8 @@
      <widget class="QSplitter" name="splitter">
       <property name="geometry">
        <rect>
-        <x>70</x>
-        <y>310</y>
+        <x>50</x>
+        <y>330</y>
         <width>311</width>
         <height>41</height>
        </rect>
@@ -90,8 +90,32 @@ QSlider::handle:horizontal:hover {
 }
 </string>
        </property>
+       <property name="maximum">
+        <number>100</number>
+       </property>
+       <property name="singleStep">
+        <number>10</number>
+       </property>
+       <property name="value">
+        <number>10</number>
+       </property>
+       <property name="sliderPosition">
+        <number>10</number>
+       </property>
+       <property name="tracking">
+        <bool>true</bool>
+       </property>
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="invertedControls">
+        <bool>false</bool>
+       </property>
+       <property name="tickPosition">
+        <enum>QSlider::TicksAbove</enum>
+       </property>
+       <property name="tickInterval">
+        <number>10</number>
        </property>
       </widget>
      </widget>
@@ -250,12 +274,50 @@ QPushButton:pressed {
      <widget class="QGraphicsView" name="GVController">
       <property name="geometry">
        <rect>
-        <x>510</x>
-        <y>50</y>
-        <width>200</width>
-        <height>200</height>
+        <x>470</x>
+        <y>20</y>
+        <width>301</width>
+        <height>291</height>
        </rect>
       </property>
+     </widget>
+     <widget class="QSplitter" name="splitter_2">
+      <property name="geometry">
+       <rect>
+        <x>370</x>
+        <y>330</y>
+        <width>91</width>
+        <height>41</height>
+       </rect>
+      </property>
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <widget class="QLabel" name="LSpeed">
+       <property name="styleSheet">
+        <string notr="true">QLabel {
+    font: bold 14pt &quot;Segoe UI&quot;;
+    color: #333;
+}
+</string>
+       </property>
+       <property name="text">
+        <string>0.0</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_10">
+       <property name="styleSheet">
+        <string notr="true">QLabel {
+    font: bold 14pt &quot;Segoe UI&quot;;
+    color: #333;
+}
+
+</string>
+       </property>
+       <property name="text">
+        <string>m/s</string>
+       </property>
+      </widget>
      </widget>
     </widget>
     <widget class="QWidget" name="tab_2">
@@ -281,7 +343,7 @@ QPushButton:pressed {
        <string>Saved Locations</string>
       </property>
      </widget>
-     <widget class="QListWidget" name="listWidget">
+     <widget class="QListWidget" name="LWSaveLocations">
       <property name="geometry">
        <rect>
         <x>70</x>
@@ -388,7 +450,7 @@ QPushButton:pressed {
        <enum>QFrame::Raised</enum>
       </property>
      </widget>
-     <widget class="QPushButton" name="pushButton">
+     <widget class="QPushButton" name="PBStartNavigation">
       <property name="geometry">
        <rect>
         <x>30</x>
@@ -442,7 +504,7 @@ QPushButton:pressed {
          <x>10</x>
          <y>0</y>
          <width>201</width>
-         <height>51</height>
+         <height>31</height>
         </rect>
        </property>
        <property name="styleSheet">
@@ -453,6 +515,16 @@ QPushButton:pressed {
        </property>
        <property name="text">
         <string>Map Preview</string>
+       </property>
+      </widget>
+      <widget class="QGraphicsView" name="GVMap">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>30</y>
+         <width>281</width>
+         <height>251</height>
+        </rect>
        </property>
       </widget>
      </widget>
@@ -525,7 +597,7 @@ QPushButton:pressed {
         </widget>
        </item>
        <item>
-        <widget class="QTextEdit" name="TEY_coordinate_2">
+        <widget class="QTextEdit" name="TEY_coordinate">
          <property name="styleSheet">
           <string notr="true">QTextEdit {
     border: 2px solid #ccc;
@@ -557,7 +629,7 @@ QPushButton:pressed {
         </widget>
        </item>
        <item>
-        <widget class="QTextEdit" name="TETheta_coordinate_3">
+        <widget class="QTextEdit" name="TETheta_coordinate">
          <property name="styleSheet">
           <string notr="true">QTextEdit {
     border: 2px solid #ccc;
@@ -579,10 +651,10 @@ QPushButton:pressed {
      </widget>
      <zorder>frame</zorder>
      <zorder>label_3</zorder>
-     <zorder>listWidget</zorder>
+     <zorder>LWSaveLocations</zorder>
      <zorder>PBAddNewLocation</zorder>
      <zorder>PBEditLocation</zorder>
-     <zorder>pushButton</zorder>
+     <zorder>PBStartNavigation</zorder>
      <zorder>frame_2</zorder>
      <zorder>layoutWidget</zorder>
     </widget>
@@ -758,7 +830,7 @@ QPushButton:pressed {
        <string>Exploration Mode</string>
       </property>
      </widget>
-     <widget class="QRadioButton" name="radioButton">
+     <widget class="QRadioButton" name="RBmaunal">
       <property name="geometry">
        <rect>
         <x>450</x>
@@ -771,7 +843,7 @@ QPushButton:pressed {
        <string>Manual</string>
       </property>
      </widget>
-     <widget class="QRadioButton" name="radioButton_2">
+     <widget class="QRadioButton" name="RB_Automate">
       <property name="geometry">
        <rect>
         <x>540</x>
@@ -790,8 +862,8 @@ QPushButton:pressed {
      <zorder>PBSaveMap</zorder>
      <zorder>PBLoadMap</zorder>
      <zorder>label_9</zorder>
-     <zorder>radioButton</zorder>
-     <zorder>radioButton_2</zorder>
+     <zorder>RBmaunal</zorder>
+     <zorder>RB_Automate</zorder>
     </widget>
     <widget class="QWidget" name="tab_4">
      <attribute name="title">
@@ -880,7 +952,7 @@ QProgressBar::chunk {
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>800</width>
+     <width>781</width>
      <height>20</height>
     </rect>
    </property>
