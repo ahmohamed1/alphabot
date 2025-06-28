@@ -224,7 +224,7 @@ hardware_interface::return_type AlphabotInterface::read(const rclcpp::Time &,
         // RCLCPP_INFO(rclcpp::get_logger("AlphabotInterface"), "Left Wheel Position: %f", position_states_.at(1));
       }else if (res.at(0) == 'v')
       {
-        float voltage = std::stof(res.substr(1));
+        float voltage = std::stof(res.substr(2, res.size()));
         std_msgs::msg::Float32 msg;
         msg.data = voltage;
         battery_pub_->publish(msg);

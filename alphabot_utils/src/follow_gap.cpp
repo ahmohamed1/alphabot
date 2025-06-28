@@ -42,7 +42,7 @@ std::vector<double> processed_scan;
 void process_scan(const sensor_msgs::msg::LaserScan::ConstSharedPtr scan_msg)
 {
     this->processed_scan.clear();
-    for (int i = 0; i < scan_msg->ranges.size(); i++)
+    for (int i = 0; i < (int)scan_msg->ranges.size(); i++)
     {   
         if(scan_msg->ranges[i] > 3.0)
             this->processed_scan.push_back(0);
@@ -59,7 +59,7 @@ std::pair<int, int> find_max_gap() {
     int largest_starting_i = 0;
     int longest_gap = 0;
     int current_gap = 0;
-    for (size_t i = 0; i < (int)this->processed_scan.size(); i++) {
+    for (size_t i = 0; i < (size_t)this->processed_scan.size(); i++) {
         if (this->processed_scan[i] < 0.5) {
             current_gap = 0;
         } else {
