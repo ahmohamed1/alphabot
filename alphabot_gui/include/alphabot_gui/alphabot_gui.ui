@@ -502,7 +502,7 @@ QPushButton:pressed {
         <string>Map Preview</string>
        </property>
       </widget>
-      <widget class="QWidget" name="rvizContainer" native="true">
+      <widget class="QFrame" name="rvizContainer">
        <property name="geometry">
         <rect>
          <x>10</x>
@@ -510,6 +510,12 @@ QPushButton:pressed {
          <width>421</width>
          <height>251</height>
         </rect>
+       </property>
+       <property name="frameShape">
+        <enum>QFrame::StyledPanel</enum>
+       </property>
+       <property name="frameShadow">
+        <enum>QFrame::Raised</enum>
        </property>
       </widget>
      </widget>

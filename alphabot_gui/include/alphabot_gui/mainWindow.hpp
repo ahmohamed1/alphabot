@@ -20,6 +20,14 @@
 #include <QString>
 
 
+#include <rviz_common/render_panel.hpp>
+#include <rviz_common/visualization_manager.hpp>
+#include <rviz_common/ros_integration/ros_node_abstraction.hpp>
+#include <rviz_common/window_manager_interface.hpp>
+#include <rviz_common/display.hpp>
+#include <rviz_common/display_group.hpp>
+
+
 struct Location {
     QString name;
     double x;
@@ -44,6 +52,9 @@ private slots:
     void addLocation();
     void editLocation();
     void startNavigation();
+
+    // void updateFrame();                      // Slot to update the reference frame
+    // void updateMapReceivedIndicator(bool received);  // Updates the map received indicator in the GUI
 
 
 private:
@@ -71,6 +82,37 @@ private:
 
     QVector<Location> locations;
     QString locationsFile = "locations.txt";   // file storage path
+
+
+    // Rviz 
+
+    void initializeRViz();                   // Initializes RViz components
+    //void DisplayGrid();                      // Sets up the grid and TF displays
+    //void setupRobotModel();                  // Sets up the robot model display
+    void setupJoystickControls();            // Initializes joystick buttons for movement control
+    //void setupMapSubscriber();               // Sets up the map subscriber to listen for map data
+    
+    
+    
+    void setupGridDisplay();
+    void setupTFDisplay();
+    void setupMapDisplay();
+    void setupRobotModelDisplay();
+    void setupMapSubscriber();
+    void setupLaserScanDisplay();
+
+
+    rviz_common::Display *grid_;             // Grid display object
+    rviz_common::Display *tf_display_;       // TF display object
+    rviz_common::Display *map_display_;      // Map display object
+    rviz_common::Display *robot_model_display_; // RobotModel display object
+    rviz_common::RenderPanel* renderPanel_ = nullptr;
+    rviz_common::VisualizationManager* manager_ = nullptr;
+
+    // ROS node and publisher for /cmd_vel
+    std::shared_ptr<rviz_common::ros_integration::RosNodeAbstraction> rviz_ros_node_ = nullptr;
+    rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr mapSubscriber_; // Subscriber for map data
+    bool mapReceived_;                       // Boolean flag to track map data reception
 
 };
 
