@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>781</width>
+    <width>782</width>
     <height>600</height>
    </rect>
   </property>
@@ -24,7 +24,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>1</number>
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
@@ -352,21 +352,6 @@ QPushButton:pressed {
         <height>192</height>
        </rect>
       </property>
-      <item>
-       <property name="text">
-        <string>Kitchen</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Office</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Living Room</string>
-       </property>
-      </item>
      </widget>
      <widget class="QPushButton" name="PBAddNewLocation">
       <property name="geometry">
@@ -517,12 +502,12 @@ QPushButton:pressed {
         <string>Map Preview</string>
        </property>
       </widget>
-      <widget class="QGraphicsView" name="GVMap">
+      <widget class="QWidget" name="rvizContainer" native="true">
        <property name="geometry">
         <rect>
          <x>10</x>
          <y>30</y>
-         <width>411</width>
+         <width>421</width>
          <height>251</height>
         </rect>
        </property>
@@ -952,7 +937,7 @@ QProgressBar::chunk {
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>781</width>
+     <width>782</width>
      <height>20</height>
     </rect>
    </property>
