@@ -51,6 +51,13 @@ def generate_launch_description():
         ],
     )
 
+    map_reloader_node = Node(
+        package="alphabot_localization",
+        executable="MapReloader.py",
+        name="map_reloader",
+        output="screen",
+    )
+    
     nav2_amcl = Node(
         package="nav2_amcl",
         executable="amcl",
@@ -80,6 +87,7 @@ def generate_launch_description():
         use_sim_time_arg,
         amcl_config_arg,
         nav2_map_server,
+        map_reloader_node,
         nav2_amcl,
         nav2_lifecycle_manager,
     ])

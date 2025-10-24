@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>React App</title>
+
+    <!-- Load in exact order - dependencies first -->
+    <script src="./js/eventemitter2.min.js"></script>
+    <script src="./js/roslib.js"></script>
+    <script src="./js/mjpegcanvas.min.js"></script>
+    <script src="./js/ease1js.js"></script>
+    <script
+      src="./js/ros2d.js"
+      onload="console.log('✅ Script loaded!')"
+      onerror="console.error('❌ Script failed to load!')"
+    ></script>
+    <script src="./js/nav2d.min.js"></script>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+  </body>
+</html>
