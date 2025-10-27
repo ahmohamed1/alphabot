@@ -82,7 +82,7 @@ function sendGoal(pose) {
       });
     } else {
       that.goalMarker = new ROS2D.NavigationArrow({
-        size: 15,
+        size: 10,
         strokeSize: 1,
         fillColor: createjs.Graphics.getRGB(255, 64, 128, 0.66),
         pulse: true,
