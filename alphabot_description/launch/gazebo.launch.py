@@ -87,12 +87,28 @@ def generate_launch_description():
         ]
     )
 
+    gz_ros2_image_bridge = Node(
+        package="ros_gz_bridge",
+        executable="parameter_bridge",
+        arguments=[
+            "/world/default/model/alphabot/link/base_footprint/sensor/camera/image@sensor_msgs/msg/Image[gz.msgs.Image",
+            "/world/default/model/alphabot/link/base_footprint/sensor/camera/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo"
+        ],
+        remappings=[
+            ("/world/default/model/alphabot/link/base_footprint/sensor/camera/image", "/camera/image_raw"),
+            ("/world/default/model/alphabot/link/base_footprint/sensor/camera/camera_info", "/camera/camera_info")
+        ],
+        output="screen"
+    )
+
+
     return LaunchDescription([
         model_arg,
         world_name_arg,
         gazebo_resource_path,
         robot_state_publisher_node,
         gazebo,
+        gz_ros2_image_bridge,
         gz_spawn_entity,
-        gz_ros2_bridge
+        gz_ros2_bridge,
     ])

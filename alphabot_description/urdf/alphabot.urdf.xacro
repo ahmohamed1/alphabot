@@ -10,6 +10,7 @@
 
     <xacro:include filename="$(find alphabot_description)/urdf/alphabot_gazebo.xacro"/> 
     <xacro:include filename="$(find alphabot_description)/urdf/alphabot_ros2_control.xacro"/>  
+    <xacro:include filename="$(find alphabot_description)/urdf/camera.xacro" />
     <!-- <xacro:include filename="$(find alphabot_description)/urdf/depth_camera.xacro" /> -->
 
     <material name="white">
