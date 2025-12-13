@@ -63,6 +63,7 @@ CallbackReturn AlphabotInterface::on_init(const hardware_interface::HardwareInfo
     node_ = rclcpp::Node::make_shared("alphabot_hw_node");
 
     battery_pub_ = node_->create_publisher<std_msgs::msg::Float32>("battery_voltage", 10);
+    bumper_pub_ = node_->create_publisher<std_msgs::msg::Int16>("bumper_status", 10);
     spinner_thread_ = std::thread([this](){
       rclcpp::spin(node_);
     });
@@ -228,6 +229,12 @@ hardware_interface::return_type AlphabotInterface::read(const rclcpp::Time &,
         std_msgs::msg::Float32 msg;
         msg.data = voltage;
         battery_pub_->publish(msg);
+      }else if (res.at(0) == 'b')
+      {
+        int bumperReading = std::stoi(res.substr(2, res.size()));
+        std_msgs::msg::Int16 msg;
+        msg.data = bumperReading;
+        bumper_pub_->publish(msg);
       }
     }
     last_run_ = rclcpp::Clock().now();
