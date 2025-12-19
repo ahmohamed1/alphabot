@@ -1,0 +1,35 @@
+        <style>
+        /* Joystick styles */
+        .joystick-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 300px;
+        }
+
+        .joystick-base {
+            width: 200px;
+            height: 200px;
+            background: #ddd;
+            border-radius: 50%;
+            position: relative;
+            touch-action: none;
+        }
+
+        .joystick-stick {
+            width: 60px;
+            height: 60px;
+            background: coral;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .output {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+    </style>
