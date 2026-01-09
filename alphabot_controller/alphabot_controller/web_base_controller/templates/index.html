@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robot Controller</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
+    <!-- Socket.IO -->
+    <script src="https://cdn.socket.io/3.1.3/socket.io.min.js"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body scroll="no" style="overflow: hidden; position: fixed;">
+
+    <div class="jumbotron text-center">
+        <h1>Robot Controller</h1>
+    </div>
+
+    <div class="container">
+        <div class="row">
+
+            <!-- LEFT COLUMN: Joystick -->
+            <div class="col-sm-4">
+                <div class="joystick-container">
+                    <div class="joystick-base" id="joystickBase">
+                        <div class="joystick-stick" id="joystickStick"></div>
+                    </div>
+                </div>
+                <div class="output">
+                    X: <span id="xVal">0</span> |
+                    Y: <span id="yVal">0</span>
+                </div>
+            </div>
+
+            <!-- MIDDLE COLUMN: Robot State -->
+            <div class="col-sm-4">
+                <h3>Robot State (Feedback)</h3>
+                <table class="table table-bordered">
+                    <tr><th>Linear Velocity (m/s)</th><td id="linVel">0</td></tr>
+                    <tr><th>Angular Velocity (rad/s)</th><td id="angVel">0</td></tr>
+                    <tr><th>X (m)</th><td id="posX">0</td></tr>
+                    <tr><th>Y (m)</th><td id="posY">0</td></tr>
+                    <tr><th>Yaw (rad)</th><td id="yaw">0</td></tr>
+                </table>
+            </div>
+
+            <!-- RIGHT COLUMN: Map -->
+            <div class="col-sm-4">
+                <h3>Map</h3>
+                <canvas id="mapCanvas" width="300" height="300" style="border:1px solid #333;"></canvas>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Custom Scripts -->
+    <script src="{{ url_for('static', filename='scripts/joystick.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/state.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/map.js') }}"></script>
+
+</body>
+</html>

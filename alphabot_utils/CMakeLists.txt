@@ -21,6 +21,8 @@ find_package(tf2_geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
 
+find_package(PkgConfig REQUIRED)
+
 pkg_check_modules(SERIAL libserial)
 
 # find_package(cv_bridge REQUIRED)

@@ -7,6 +7,7 @@
 #include <rclcpp_lifecycle/state.hpp>
 #include <rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp>
 #include "std_msgs/msg/float32.hpp"
+#include "std_msgs/msg/int16.hpp"
 #include <vector>
 #include <string>
 #include <cmath>
@@ -54,6 +55,7 @@ private:
 
   rclcpp::Node::SharedPtr node_;
   rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr battery_pub_;
+  rclcpp::Publisher<std_msgs::msg::Int16>::SharedPtr bumper_pub_;
   std::thread spinner_thread_;
 
   LibSerial::SerialPort arduino_;
