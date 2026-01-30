@@ -14,12 +14,35 @@ canvas.addEventListener("click", (e) => {
     const cx = e.clientX - rect.left;
     const cy = e.clientY - rect.top;
 
-    const mapPoint = canvasToMap(cx, cy);
+    // account for CSS scaling: convert client (CSS) coordinates to canvas pixel coordinates
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const canvasX = cx * scaleX;
+    const canvasY = cy * scaleY;
+
+    const mapPoint = canvasToMap(canvasX, canvasY);
     goalPose = mapPoint;
     
     console.log("Goal clicked:", mapPoint);
 
-    socket.emit("goal", mapPoint);
+    // if there's a pending location name (user selected to assign click to a saved location),
+    // set that location's coordinates and save
+    if(window.pendingLocationName){
+        const name = window.pendingLocationName;
+        window.pendingLocationName = null;
+        // update stored locations in localStorage if present
+        try{
+            const raw = localStorage.getItem('robot_locations_v1');
+            if(raw){
+                const arr = JSON.parse(raw);
+                const idx = arr.findIndex(l => l.name === name);
+                if(idx !== -1){ arr[idx].x = mapPoint.x; arr[idx].y = mapPoint.y; localStorage.setItem('robot_locations_v1', JSON.stringify(arr)); }
+            }
+        }catch(e){ /* ignore */ }
+    }
+
+    const s = window.socket || socket;
+    if(s && s.emit) s.emit("goal", mapPoint);
 });
 
 function canvasToMap(x, y) {

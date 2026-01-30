@@ -1,6 +1,18 @@
 const socket = io();
+// make socket available to other scripts
+window.socket = socket;
+
+// Expose current robot pose for other scripts (e.g., UI modals)
+window.currentRobotPose = null;
 
 socket.on("state", data => {
+    // store latest pose on window for other UI code to access
+    window.currentRobotPose = {
+        x: data.x,
+        y: data.y,
+        yaw: data.yaw
+    };
+
     document.getElementById("linVel").textContent =
         data.linear_x.toFixed(2);
 

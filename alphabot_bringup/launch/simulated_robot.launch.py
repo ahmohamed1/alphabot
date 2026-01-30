@@ -111,22 +111,22 @@ def generate_launch_description():
         parameters=[{"use_sim_time": True}],
     )
 
-    # This will launch SLAM/Localization, Navigation, and RViz AFTER controller.launch.py exits
+    # Start remaining launch items after a short delay to let Gazebo initialize.
     delayed_launch = TimerAction(
-        period= 10.0,  # Adjust seconds as needed
+        period=10.0,  # seconds; adjust as needed for Gazebo readiness
         actions=[
+            controller_launch,
+            twist_relay_node,
+            twist_mux_launch,
+            localization,
+            rviz,
             slam,
             navigation,
-        ]
+        ],
     )
 
     return LaunchDescription([
         use_slam_arg,
         gazebo,
-        controller_launch,
-        twist_relay_node,
-        twist_mux_launch,
-        localization,
-        rviz,
-        delayed_launch
+        delayed_launch,
     ])

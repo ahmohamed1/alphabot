@@ -22,8 +22,11 @@ function getBaseCenter() {
 }
 
 // Send joystick values to server
-function sendJoystick(x, y) {
-    socket.emit("joystick", { x: x, y: y });
+// Send joystick values to server. Only emit when dragging unless `force` is true.
+function sendJoystick(x, y, force = false) {
+    if (!force && !dragging) return;
+    const s = window.socket || (typeof socket !== 'undefined' && socket);
+    if (s && s.emit) s.emit("joystick", { x: x, y: y });
 }
 
 // Update stick position and X/Y display
@@ -62,7 +65,7 @@ function stopDrag() {
     if (sendInterval) {
         clearInterval(sendInterval);
         sendInterval = null;
-        sendJoystick(0, 0); // final stop
+        sendJoystick(0, 0, true); // final stop (force send even when not dragging)
     }
 }
 
