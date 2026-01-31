@@ -6,6 +6,7 @@
     <max_step_size>0.01</max_step_size>
   </physics>
 
+
   <model name='AirconditionerA_01_001'>
         <static>true</static>
         <include>
@@ -383,13 +384,21 @@
         <pose frame=''>5.737017 3.080310 0.300000 0 -0 0</pose>
 	</model>
 
-	<model name='PortraitB_03'>
-        <static>true</static>    
+    <model name='PortraitB_03'>
+        <static>true</static>
         <include>
-            <uri>model://aws_robomaker_residential_PortraitB_03</uri>
+            <uri>model://power_station_with_apriltag</uri>
         </include>
-        <pose frame=''>3.071380 -5.349366 0.005494 -0.168428 0.0 3.104232</pose>
-	</model>
+        <pose frame=''>3.071380 -5.349366 0 0 0 3.104232</pose>
+    </model>
+    <!-- Chargin dock installation /////////// -->
+    <model name='ChargingDock_01'>
+        <static>true</static>
+        <include>
+            <uri>model://charging_dock</uri>
+        </include>
+        <pose frame=''>3.9 -5.349366 0.0 0 0 1.5</pose>
+    </model>
 
 	<model name='PortraitA_02'>
         <static>true</static>    

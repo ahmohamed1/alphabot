@@ -1,0 +1,7 @@
+/**:
+  ros__parameters:
+    image_transport: raw
+    family: 36h11
+    size: 0.18
+    max_hamming: 0
+    z_up: true

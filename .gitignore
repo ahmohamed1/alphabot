@@ -1,1 +1,4 @@
-alphabot_description/models
+alphabot_description/models/*
+!alphabot_description/models/power_station_with_apriltag/
+!alphabot_description/models/Apriltag36_11_00000/
+!alphabot_description/models/acuro_0_6x6x250

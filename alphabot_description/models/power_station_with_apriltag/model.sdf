@@ -1,0 +1,61 @@
+<?xml version='1.0'?>
+<sdf version='1.6'>
+  <model name='power_station_with_apriltag'>
+    <static>true</static>
+
+    <!-- Main box -->
+    <link name='box_link'>
+      <!-- smaller box: 0.3 x 0.3 x 0.3 -->
+      <pose>0 0 0.15 0 0 0</pose>
+
+      <collision name='collision'>
+        <geometry>
+          <box>
+            <size>0.3 0.3 0.3</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <visual name='box_visual'>
+        <geometry>
+          <box>
+            <size>0.3 0.3 0.3</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.8 0.8 0.8 1</ambient>
+          <diffuse>0.9 0.9 0.9 1</diffuse>
+        </material>
+      </visual>
+
+      <!-- AprilTag decal: thin plate attached to the front face (+y) of the box -->
+      <visual name='apriltag_visual'>
+        <!-- Position at front face: negative half box size (-0.3/2 = -0.15) with small offset -->
+        <pose>0 -0.155 0.15  1.570796 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://Apriltag36_11_00000/meshes/tag36_11_00000.dae</uri>
+            <scale>2 2 2</scale>
+          </mesh>
+        </geometry>
+        <transparency>0</transparency>
+      </visual>
+
+      <!-- ArUco visual: placed under the AprilTag on the same face -->
+      <visual name='aruco_visual'>
+        <pose>0 -0.155 -0.05 1.570796 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://acuro_0_6x6x250/meshes/acuro_0.dae</uri>
+            <scale>1.5 1.5 1.5</scale>
+          </mesh>
+        </geometry>
+        <transparency>0</transparency>
+      </visual>
+
+    </link>
+
+    <!-- Optional pose so you can place this model by name in world files -->
+    <pose>0 0 0 0 0 0</pose>
+  </model>
+</sdf>
