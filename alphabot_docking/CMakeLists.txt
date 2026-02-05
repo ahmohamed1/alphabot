@@ -32,5 +32,20 @@ install(
   DESTINATION lib/${PROJECT_NAME}
 )
 
+install(
+  PROGRAMS src/alphabot_docking/aruco_tf_broadcaster.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+install(
+  PROGRAMS src/alphabot_docking/aruco_opencv_node.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+install(
+  PROGRAMS src/alphabot_docking/auto_dock_node.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 
 ament_package()

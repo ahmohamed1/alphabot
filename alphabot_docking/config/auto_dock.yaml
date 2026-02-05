@@ -1,0 +1,25 @@
+auto_dock_node:
+  ros__parameters:
+    # Battery parameters
+    battery_threshold: 25.0  # Trigger docking when battery drops below 25%
+    
+    # Dock pose [x, y, yaw] - fallback position if marker not found
+    dock_pose: [3.6, -3.6, -1.59]
+    
+    # ArUco marker detection parameters
+    aruco_marker_size: 0.15  # Size of the ArUco marker in meters
+    aruco_target_id: 0       # Target ArUco marker ID
+    camera_topic: "/camera/image_raw"
+    camera_info_topic: "/camera/camera_info"
+    
+    # Search parameters
+    search_angular_speed: 0.5  # rad/s - rotation speed while searching
+    search_timeout: 30.0       # seconds - max time to search for marker
+    
+    # Servo parameters (visual servo toward marker)
+    linear_speed_max: 0.3     # m/s - max linear speed
+    angular_speed_max: 1.0    # rad/s - max angular speed
+    linear_gain: 0.5          # Proportional gain for linear control
+    angular_gain: 2.0         # Proportional gain for angular control
+    alignment_threshold: 0.05 # rad - angular error threshold for alignment (2.9 degrees)
+    dock_stop_distance: 0.3   # m - stop when within this distance to prevent losing marker
