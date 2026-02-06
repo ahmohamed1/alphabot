@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robot Navigation</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
+    <!-- Socket.IO -->
+    <script src="https://cdn.socket.io/3.1.3/socket.io.min.js"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        body { overflow: auto; position: static; }
+        .jumbotron h1 { font-size: 1.6rem; margin: 0.5rem 0; }
+        #mapCanvas { width: 100% !important; height: auto !important; max-height: 70vh; display:block; }
+        #cameraFeed { width: 100% !important; height: auto !important; max-height: 70vh; display:none; border:1px solid #333; }
+        .view-toggle { display:flex; justify-content:center; gap:8px; margin-top:8px; }
+        @media (min-width: 768px) {
+            .jumbotron h1 { font-size: 2.4rem; }
+            #mapCanvas { max-height: 75vh; }
+            #cameraFeed { max-height: 75vh; }
+        }
+        @media (max-width: 767px) {
+            .container { padding-left: 10px; padding-right: 10px; }
+            #mapCanvas, #cameraFeed { max-height: 50vh; }
+            .view-toggle .btn { padding: 8px 12px; }
+            .col-md-4 { margin-top: 12px; }
+        }
+        @media (orientation: landscape) and (max-width: 900px) {
+            .jumbotron { padding: 10px 0; margin-bottom: 8px; }
+            .jumbotron h1 { font-size: 1.2rem; }
+            .navbar { margin-bottom: 6px; }
+            #mapCanvas, #cameraFeed { max-height: 58vh; }
+            .view-toggle .btn { padding: 6px 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-default">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#main-navbar">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="#">Robot Controller</a>
+            </div>
+
+            <div class="collapse navbar-collapse" id="main-navbar">
+                <ul class="nav navbar-nav">
+                    <li><a href="/">Robot State</a></li>
+                    <li class="active"><a href="#">Navigation</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="jumbotron text-center">
+        <h1>Navigation</h1>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-7 col-md-8">
+                <h3 class="text-center">View</h3>
+                <canvas id="mapCanvas" style="border:1px solid #333;" width="300" height="300"></canvas>
+                <img id="cameraFeed" src="" alt="Camera Feed" />
+                <div class="view-toggle">
+                    <button id="btnShowMap" class="btn btn-default btn-sm active">Map</button>
+                    <button id="btnShowCamera" class="btn btn-default btn-sm">Camera</button>
+                </div>
+                <div style="margin-top:8px; text-align:center;">
+                    <button id="btnStartMapping" class="btn btn-warning">Start Mapping</button>
+                </div>
+            </div>
+            <div class="col-xs-5 col-md-4">
+                <h4>Saved Locations</h4>
+                <div id="locationsSection">
+                    <select id="locationsSelect" class="form-control">
+                        <!-- populated by JS -->
+                    </select>
+                    <div style="margin-top:8px;">
+                        <button id="btnNavigate" class="btn btn-primary" disabled>Navigate</button>
+                        <button id="btnAddLocation" class="btn btn-default" data-toggle="modal" data-target="#addLocationModal">Add New Location</button>
+                        <button id="btnDeleteLocation" class="btn btn-danger" disabled>Delete</button>
+                    </div>
+                </div>
+
+                <!-- Add Location Modal -->
+                <div id="addLocationModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="addLocationLabel">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                <h4 class="modal-title" id="addLocationLabel">Add New Location</h4>
+                            </div>
+                            <div class="modal-body">
+                                <form id="addLocationForm">
+                                    <div class="form-group">
+                                        <label for="locName">Name</label>
+                                        <input type="text" class="form-control" id="locName" required />
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="locX">X (optional)</label>
+                                        <input type="number" step="0.01" class="form-control" id="locX" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="locY">Y (optional)</label>
+                                        <input type="number" step="0.01" class="form-control" id="locY" />
+                                    </div>
+                                    <div class="form-group">
+                                        <small id="currentLocHint" class="text-muted">You can use the robot's current location if available.</small>
+                                        <div style="margin-top:6px;">
+                                            <button type="button" id="useCurrentLoc" class="btn btn-default btn-sm">Use Current Location</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                                <button type="button" id="addLocationSubmit" class="btn btn-primary">Add Location</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Scripts -->
+    <script src="{{ url_for('static', filename='scripts/state.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/map.js') }}"></script>
+
+    <script>
+        (function(){
+            const btnStartMapping = document.getElementById('btnStartMapping');
+            let mappingActive = false;
+            btnStartMapping.addEventListener('click', function(){
+                mappingActive = !mappingActive;
+                if(mappingActive){
+                    btnStartMapping.textContent = 'Stop Mapping';
+                    const s = window.socket || socket;
+                    if(s && s.emit) s.emit('start_mapping');
+                } else {
+                    btnStartMapping.textContent = 'Start Mapping';
+                    const s = window.socket || socket;
+                    if(s && s.emit) s.emit('stop_mapping');
+                }
+            });
+
+            // --- View toggle (Map / Camera) ---
+            const btnShowMap = document.getElementById('btnShowMap');
+            const btnShowCamera = document.getElementById('btnShowCamera');
+            const mapCanvas = document.getElementById('mapCanvas');
+            const cameraFeed = document.getElementById('cameraFeed');
+
+            function setView(view){
+                const isMap = view === 'map';
+                mapCanvas.style.display = isMap ? 'block' : 'none';
+                cameraFeed.style.display = isMap ? 'none' : 'block';
+                btnShowMap.classList.toggle('active', isMap);
+                btnShowCamera.classList.toggle('active', !isMap);
+                btnStartMapping.style.display = isMap ? '' : 'none';
+            }
+
+            btnShowMap.addEventListener('click', function(e){ e.preventDefault(); setView('map'); });
+            btnShowCamera.addEventListener('click', function(e){ e.preventDefault(); setView('camera'); });
+            setView('map');
+
+            // --- Locations management (dropdown + modal) ---
+            const LOC_KEY = 'robot_locations_v1';
+            const locationsSelect = document.getElementById('locationsSelect');
+            const btnAddSubmit = document.getElementById('addLocationSubmit');
+            const btnNavigate = document.getElementById('btnNavigate');
+            const btnDelete = document.getElementById('btnDeleteLocation');
+            const locNameInput = document.getElementById('locName');
+            const locXInput = document.getElementById('locX');
+            const locYInput = document.getElementById('locY');
+            let locations = [];
+            let selectedIndex = -1;
+
+            function loadLocations(){
+                try{
+                    const raw = localStorage.getItem(LOC_KEY);
+                    locations = raw ? JSON.parse(raw) : [];
+                }catch(e){ locations = []; }
+            }
+
+            function saveLocations(){
+                localStorage.setItem(LOC_KEY, JSON.stringify(locations));
+            }
+
+            function renderLocations(){
+                locationsSelect.innerHTML = '';
+                if(locations.length === 0){
+                    const opt = document.createElement('option');
+                    opt.value = '';
+                    opt.innerText = 'No saved locations';
+                    locationsSelect.appendChild(opt);
+                    selectedIndex = -1;
+                    btnNavigate.disabled = true;
+                    btnDelete.disabled = true;
+                    return;
+                }
+                locations.forEach((loc, idx) => {
+                    const opt = document.createElement('option');
+                    opt.value = String(idx);
+                    opt.innerText = loc.name + (loc.x !== undefined ? ` (${loc.x.toFixed(2)}, ${loc.y.toFixed(2)})` : '');
+                    locationsSelect.appendChild(opt);
+                });
+                if(selectedIndex >= 0 && selectedIndex < locations.length){
+                    locationsSelect.value = String(selectedIndex);
+                    btnNavigate.disabled = false;
+                    btnDelete.disabled = false;
+                } else {
+                    locationsSelect.selectedIndex = 0;
+                    selectedIndex = locations.length > 0 ? 0 : -1;
+                    btnNavigate.disabled = (selectedIndex === -1);
+                    btnDelete.disabled = (selectedIndex === -1);
+                }
+            }
+
+            locationsSelect.addEventListener('change', function(){
+                const v = locationsSelect.value;
+                if(v === ''){ selectedIndex = -1; btnNavigate.disabled = true; btnDelete.disabled = true; }
+                else { selectedIndex = parseInt(v,10); btnNavigate.disabled = false; btnDelete.disabled = false; }
+            });
+
+            const useCurrentBtn = document.getElementById('useCurrentLoc');
+            $('#addLocationModal').on('shown.bs.modal', function () {
+                if(window.currentRobotPose){
+                    useCurrentBtn.disabled = false;
+                    document.getElementById('currentLocHint').textContent = 'Robot position detected — you can use it.';
+                } else {
+                    useCurrentBtn.disabled = true;
+                    document.getElementById('currentLocHint').textContent = 'No robot position available; enter coordinates manually.';
+                }
+            });
+
+            useCurrentBtn.addEventListener('click', function(){
+                if(!window.currentRobotPose) return;
+                locXInput.value = window.currentRobotPose.x.toFixed(3);
+                locYInput.value = window.currentRobotPose.y.toFixed(3);
+                const suggested = 'Loc ' + new Date().toISOString().replace(/[:.]/g,'-');
+                if(!locNameInput.value) locNameInput.value = suggested;
+            });
+
+            btnAddSubmit.addEventListener('click', function(){
+                const name = locNameInput.value && locNameInput.value.trim();
+                if(!name){ alert('Name is required'); return; }
+                const x = locXInput.value !== '' ? parseFloat(locXInput.value) : undefined;
+                const y = locYInput.value !== '' ? parseFloat(locYInput.value) : undefined;
+                locations.push({name:name, x:x, y:y});
+                saveLocations(); renderLocations();
+                locNameInput.value = '';
+                locXInput.value = '';
+                locYInput.value = '';
+                $('#addLocationModal').modal('hide');
+            });
+
+            btnNavigate.addEventListener('click', function(){
+                if(selectedIndex === -1){ return; }
+                const loc = locations[selectedIndex];
+                if(loc.x === undefined || loc.y === undefined){
+                    window.pendingLocationName = loc.name;
+                    return;
+                }
+                const goal = { x: loc.x, y: loc.y };
+                const s = window.socket || socket;
+                if(s && s.emit){
+                    s.emit('goal', goal);
+                }
+            });
+
+            btnDelete.addEventListener('click', function(){
+                if(selectedIndex === -1){ return; }
+                const loc = locations[selectedIndex];
+                if(!confirm('Delete location "' + loc.name + '"?')) return;
+                locations.splice(selectedIndex,1);
+                selectedIndex = -1;
+                saveLocations(); renderLocations();
+            });
+
+            loadLocations(); renderLocations();
+        })();
+    </script>
+
+</body>
+</html>

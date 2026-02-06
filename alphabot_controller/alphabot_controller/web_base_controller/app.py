@@ -4,11 +4,15 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import OccupancyGrid
+from sensor_msgs.msg import Image
 from tf2_ros import Buffer, TransformListener
 from geometry_msgs.msg import TransformStamped
 import threading
 import math
 import time
+import base64
+import cv2
+from cv_bridge import CvBridge
 from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
 
 
@@ -39,6 +43,11 @@ map_state = {
     "data": []
 }
 
+camera_state = {
+    "jpeg": None,
+    "stamp": 0.0
+}
+
 last_cmd_time = time.time()
 CMD_TIMEOUT = 0.5  # seconds (dead-man switch)
 
@@ -61,6 +70,20 @@ class WebJoystickNode(Node):
             '/map',
             self.map_callback,
             map_qos
+        )
+
+        image_qos = QoSProfile(
+            depth=1,
+            reliability=ReliabilityPolicy.BEST_EFFORT,
+            durability=DurabilityPolicy.VOLATILE
+        )
+
+        self.bridge = CvBridge()
+        self.create_subscription(
+            Image,
+            '/camera/image_raw',
+            self.camera_callback,
+            image_qos
         )
 
         self.nav_client = ActionClient(self, NavigateToPose, 'navigate_to_pose')
@@ -158,6 +181,17 @@ class WebJoystickNode(Node):
         map_state["origin_y"] = msg.info.origin.position.y
         map_state["data"] = list(msg.data)
 
+    def camera_callback(self, msg):
+        global camera_state
+        try:
+            cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
+            ok, buffer = cv2.imencode('.jpg', cv_image, [int(cv2.IMWRITE_JPEG_QUALITY), 70])
+            if ok:
+                camera_state["jpeg"] = base64.b64encode(buffer).decode('ascii')
+                camera_state["stamp"] = time.time()
+        except Exception as e:
+            self.get_logger().warn(f"Camera decode failed: {e}")
+
 
 # ---------------- ROS INIT ----------------
 rclpy.init()
@@ -206,13 +240,24 @@ def push_map_state():
             socketio.emit("map", map_state)
         socketio.sleep(1.0)
 
+def push_camera_state():
+    while True:
+        if camera_state["jpeg"]:
+            socketio.emit("camera", {"jpeg": camera_state["jpeg"]})
+        socketio.sleep(0.2)
+
 socketio.start_background_task(push_robot_state)
 socketio.start_background_task(push_map_state)
+socketio.start_background_task(push_camera_state)
 
 # ---------------- FLASK ROUTES ----------------
 @app.route("/")
 def index():
     return render_template("index.html")
+
+@app.route("/navigation")
+def navigation():
+    return render_template("navigation.html")
 
 # ---------------- MAIN ----------------
 if __name__ == "__main__":

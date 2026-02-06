@@ -13,20 +13,23 @@ socket.on("state", data => {
         yaw: data.yaw
     };
 
-    document.getElementById("linVel").textContent =
-        data.linear_x.toFixed(2);
+    const linVelEl = document.getElementById("linVel");
+    const angVelEl = document.getElementById("angVel");
+    const posXEl = document.getElementById("posX");
+    const posYEl = document.getElementById("posY");
+    const yawEl = document.getElementById("yaw");
 
-    document.getElementById("angVel").textContent =
-        data.angular_z.toFixed(2);
+    if (linVelEl) linVelEl.textContent = data.linear_x.toFixed(2);
+    if (angVelEl) angVelEl.textContent = data.angular_z.toFixed(2);
+    if (posXEl) posXEl.textContent = data.x.toFixed(2);
+    if (posYEl) posYEl.textContent = data.y.toFixed(2);
+    if (yawEl) yawEl.textContent = data.yaw.toFixed(2);
+});
 
-    document.getElementById("posX").textContent =
-        data.x.toFixed(2);
-
-    document.getElementById("posY").textContent =
-        data.y.toFixed(2);
-
-    document.getElementById("yaw").textContent =
-        data.yaw.toFixed(2);
+socket.on("camera", data => {
+    const img = document.getElementById("cameraFeed");
+    if (!img || !data || !data.jpeg) return;
+    img.src = "data:image/jpeg;base64," + data.jpeg;
 });
 
 // socket.on("state", state => {

@@ -1,5 +1,7 @@
 // const socket = io();
 
+const socketRef = window.socket || (typeof socket !== 'undefined' && socket);
+
 const canvas = document.getElementById("mapCanvas");
 const ctx = canvas.getContext("2d");
 
@@ -41,7 +43,7 @@ canvas.addEventListener("click", (e) => {
         }catch(e){ /* ignore */ }
     }
 
-    const s = window.socket || socket;
+    const s = window.socket || (typeof socket !== 'undefined' && socket);
     if(s && s.emit) s.emit("goal", mapPoint);
 });
 
@@ -53,16 +55,20 @@ function canvasToMap(x, y) {
 }
 
 /* ---------- RECEIVE MAP ---------- */
-socket.on("map", (map) => {
-    mapInfo = map;
-    draw();
-});
+if (socketRef) {
+    socketRef.on("map", (map) => {
+        mapInfo = map;
+        draw();
+    });
+}
 
 /* ---------- RECEIVE ROBOT STATE ---------- */
-socket.on("state", (state) => {
-    robotPose = state;
-    draw();
-});
+if (socketRef) {
+    socketRef.on("state", (state) => {
+        robotPose = state;
+        draw();
+    });
+}
 
 /* ---------- DRAW EVERYTHING ---------- */
 function draw() {
