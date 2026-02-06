@@ -4,7 +4,7 @@ from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
 from launch_ros.actions import Node
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch.conditions import IfCondition, UnlessCondition
 from launch.actions import TimerAction
 
@@ -14,12 +14,20 @@ def generate_launch_description():
     use_sim_time_arg = DeclareLaunchArgument(name="use_sim_time", default_value="False",
                                       description="Use simulated time"
     )
+    use_sim_time = LaunchConfiguration("use_sim_time")
     use_slam = LaunchConfiguration("use_slam")
+    mapping_backend = LaunchConfiguration("mapping_backend")
     alphabot_controller_pkg = get_package_share_directory('alphabot_controller')
 
     use_slam_arg = DeclareLaunchArgument(
         "use_slam",
         default_value="false"
+    )
+
+    mapping_backend_arg = DeclareLaunchArgument(
+        "mapping_backend",
+        default_value="slam",
+        description="Mapping backend when use_slam:=true (slam|cartographer)"
     )
 
     hardware_interface = IncludeLaunchDescription(
@@ -73,7 +81,7 @@ def generate_launch_description():
             "global_localization.launch.py"
         ),
         condition=UnlessCondition(use_slam),
-        launch_arguments={"use_sim_time": "false"}.items()
+        launch_arguments={"use_sim_time": use_sim_time}.items()
     )
 
     slam = IncludeLaunchDescription(
@@ -82,8 +90,22 @@ def generate_launch_description():
             "launch",
             "slam.launch.py"
         ),
-        condition=IfCondition(use_slam),
-        launch_arguments={"use_sim_time": "false"}.items()
+        condition=IfCondition(PythonExpression([
+            "'", use_slam, "' == 'true' and '", mapping_backend, "' == 'slam'"
+        ])),
+        launch_arguments={"use_sim_time": use_sim_time}.items()
+    )
+
+    cartographer = IncludeLaunchDescription(
+        os.path.join(
+            get_package_share_directory("alphabot_mapping"),
+            "launch",
+            "cartographer.launch.py"
+        ),
+        condition=IfCondition(PythonExpression([
+            "'", use_slam, "' == 'true' and '", mapping_backend, "' == 'cartographer'"
+        ])),
+        launch_arguments={"use_sim_time": use_sim_time}.items()
     )
 
     navigation = IncludeLaunchDescription(
@@ -92,7 +114,7 @@ def generate_launch_description():
             "launch",
             "navigation.launch.py"
         ),
-        launch_arguments={"use_sim_time": "false"}.items()
+        launch_arguments={"use_sim_time": use_sim_time}.items()
     )
 
     robot_localization_launch = Node(
@@ -100,7 +122,14 @@ def generate_launch_description():
         executable="ekf_node",
         name="ekf_filter_node",
         output="screen",
-        parameters=[{"use_sim_time": False}]
+        parameters=[
+            os.path.join(
+                get_package_share_directory("alphabot_localization"),
+                "config",
+                "ekf.yaml",
+            ),
+            {"use_sim_time": use_sim_time},
+        ]
     )
 
     imu_driver_node = Node(
@@ -113,6 +142,7 @@ def generate_launch_description():
         period= 30.0,  # Adjust seconds as needed
         actions=[
             slam,
+            cartographer,
             navigation,
         ]
     )
@@ -120,6 +150,7 @@ def generate_launch_description():
         [
             use_sim_time_arg,
             use_slam_arg,
+            mapping_backend_arg,
             hardware_interface,
             controller,
             scanner,
