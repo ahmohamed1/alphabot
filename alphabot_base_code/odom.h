@@ -22,8 +22,8 @@ const double WHEEL_SEPERATION = 0.212;
 volatile long right_encoder_counter = 0;
 volatile long left_encoder_counter = 0;
 
-volatile long prevouse_right_tick = 0.0;
-volatile long prevouse_left_tick = 0.0;
+volatile long previous_right_tick = 0.0;
+volatile long previous_left_tick = 0.0;
 volatile long delta_right_tick = 0.0;
 volatile long delta_left_tick = 0.0;
 
@@ -32,7 +32,7 @@ volatile long delta_left_tick = 0.0;
 double distance_right = 0.0, distance_left = 0.0;
 
 // previous distance traveled
-double prevouse_distance_right = 0.0, prevouse_distance_left = 0.0;
+double previous_distance_right = 0.0, previous_distance_left = 0.0;
 double delta_distance_right = 0.0, delta_distance_left = 0.0;
 double delta_distance_total = 0.0;
 
@@ -42,20 +42,22 @@ Coordinate deltaPose(0.0,0.0,0.0);
 
 void compute_pose()
 {
-  delta_right_tick = right_encoder_counter - prevouse_right_tick;
-  delta_left_tick = left_encoder_counter - prevouse_left_tick;
+  // Disable interrupts to safely read volatile encoder counters
+  noInterrupts();
+  delta_right_tick = right_encoder_counter - previous_right_tick;
+  delta_left_tick = left_encoder_counter - previous_left_tick;
+  previous_left_tick = left_encoder_counter;
+  previous_right_tick = right_encoder_counter;
+  interrupts();
 
   distance_right += delta_right_tick * DISTANCE_PER_TICK;
   distance_left  += delta_left_tick * DISTANCE_PER_TICK;
 
-  delta_distance_right = distance_right - prevouse_distance_right;
-  delta_distance_left = distance_left - prevouse_distance_left;
+  delta_distance_right = distance_right - previous_distance_right;
+  delta_distance_left = distance_left - previous_distance_left;
 
-  prevouse_distance_right = distance_right;
-  prevouse_distance_left = distance_left;
-
-  prevouse_left_tick = left_encoder_counter;
-  prevouse_right_tick = right_encoder_counter;
+  previous_distance_right = distance_right;
+  previous_distance_left = distance_left;
 
   delta_distance_total = (delta_distance_right + delta_distance_left) / 2.0;
 

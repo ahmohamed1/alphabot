@@ -4,7 +4,7 @@ public:
   void init(int pin, float reference_voltage = 5.0, float r1 = 47000.0, float r2 = 20000.0) {
     if (pin >= A0 && pin <= A5) {  // Basic pin validation for most Arduino boards
       ANALOG_IN_PIN = pin;
-      referance_voltage_ = reference_voltage;
+      reference_voltage_ = reference_voltage;
       R1 = r1;
       R2 = r2;
       SCALE = (R1 + R2) / R2; // = 67k / 20k = 3.35
@@ -42,7 +42,7 @@ public:
     if (!initialized) return 0.0;  // Or some error value
     
     pin_reading = analogRead(ANALOG_IN_PIN);
-    adc_voltage = (pin_reading * referance_voltage_) / 1024.0;
+    adc_voltage = (pin_reading * reference_voltage_) / 1024.0;
     
     return adc_voltage * SCALE;
   }
@@ -60,7 +60,7 @@ private:
 
   int pin_reading = 0;
   float adc_voltage = 0.0;
-  float referance_voltage_ = 5.0;
+  float reference_voltage_ = 5.0;
   bool initialized = false;
   
   float min_voltage = 0.0;
