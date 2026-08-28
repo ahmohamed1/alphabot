@@ -58,6 +58,9 @@ ament_target_dependencies(follow_gap rclcpp geometry_msgs sensor_msgs)
 add_executable(pure_pursuit src/pure_pursuit.cpp)
 ament_target_dependencies(pure_pursuit rclcpp geometry_msgs sensor_msgs nav_msgs visualization_msgs tf2_ros)
 
+add_executable(servicebot_scan_filter src/servicebot_scan_filter.cpp)
+ament_target_dependencies(servicebot_scan_filter rclcpp sensor_msgs)
+
 
 target_include_directories(imu_publisher PUBLIC
  "${SERIAL_INCLUDE_DIRS}")
@@ -81,6 +84,7 @@ install(TARGETS
   follow_wall
   follow_gap
   pure_pursuit
+  servicebot_scan_filter
   # tack_robot_position
   DESTINATION lib/${PROJECT_NAME}
 )

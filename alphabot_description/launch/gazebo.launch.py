@@ -5,6 +5,7 @@ from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, SetEnvironmentVariable
+from launch.conditions import IfCondition, UnlessCondition
 from launch.substitutions import Command, LaunchConfiguration, PathJoinSubstitution, PythonExpression
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 
@@ -80,6 +81,12 @@ def generate_launch_description():
                    "-name", LaunchConfiguration("robot_model")],
     )
 
+    is_servicebot = PythonExpression(["'", LaunchConfiguration("robot_model"), "' == 'servicebot'"])
+
+    # servicebot's laser is centered on the robot, so the small side walls
+    # around the sensor housing show up as near-range "obstacles". Its scan
+    # is bridged onto /scan_raw and passed through servicebot_scan_filter
+    # (alphabot_utils) which republishes the cleaned data on /scan.
     gz_ros2_bridge = Node(
         package="ros_gz_bridge",
         executable="parameter_bridge",
@@ -90,7 +97,35 @@ def generate_launch_description():
         ],
         remappings=[
             ('/imu', '/imu/out'),
-        ]
+        ],
+        condition=UnlessCondition(is_servicebot),
+    )
+
+    gz_ros2_bridge_servicebot = Node(
+        package="ros_gz_bridge",
+        executable="parameter_bridge",
+        arguments=[
+            "/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock",
+            "/imu@sensor_msgs/msg/Imu[gz.msgs.IMU",
+            "/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan"
+        ],
+        remappings=[
+            ('/imu', '/imu/out'),
+            ('/scan', '/scan_raw'),
+        ],
+        condition=IfCondition(is_servicebot),
+    )
+
+    servicebot_scan_filter = Node(
+        package="alphabot_utils",
+        executable="servicebot_scan_filter",
+        name="servicebot_scan_filter",
+        parameters=[{"min_range": 0.25}],
+        remappings=[
+            ("scan_raw", "/scan_raw"),
+            ("scan", "/scan"),
+        ],
+        condition=IfCondition(is_servicebot),
     )
 
     return LaunchDescription([
@@ -101,5 +136,7 @@ def generate_launch_description():
         robot_state_publisher_node,
         gazebo,
         gz_spawn_entity,
-        gz_ros2_bridge
+        gz_ros2_bridge,
+        gz_ros2_bridge_servicebot,
+        servicebot_scan_filter,
     ])
