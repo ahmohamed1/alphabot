@@ -1,0 +1,297 @@
+<?xml version="1.0" ?>
+<robot name="servicebot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+<!-- Start GZ or Ignition depending on ROS 2 Version -->
+<xacro:arg name="is_ignition" default="true"/>
+
+<!-- Load Simulated or Real Hardware Interfaces -->
+<xacro:arg name="is_sim" default="true"/>
+
+<xacro:include filename="$(find alphabot_description)/urdf/servicebot/materials.xacro" />
+<xacro:include filename="$(find alphabot_description)/urdf/servicebot/servicebot_ros2_control.xacro" />
+<xacro:include filename="$(find alphabot_description)/urdf/servicebot/servicebot_gazebo.xacro" />
+
+<!--
+  NOTE: This model was exported from CAD using a Y-up / X-forward convention
+  (physically: CAD +Y = up, CAD +Z = right). ROS/Gazebo require Z-up /
+  X-forward / Y-left (REP-103) for base_link itself, not just for the
+  assembly as seen from its parent. Every joint origin, mesh orientation,
+  wheel axis and inertia tensor below has therefore been re-expressed in the
+  ROS convention via the fixed permutation (x, y, z)_cad -> (x, -z, y)_ros,
+  so base_link's own local axes are X=forward, Y=left, Z=up. base_joint is
+  now a plain identity transform, matching alphabot's convention.
+-->
+<link name="base_footprint"/>
+
+<joint name="base_joint" type="fixed">
+  <parent link="base_footprint"/>
+  <child link="base_link"/>
+  <origin xyz="0.0 0.0 0.06" rpy="0.0 0.0 0.0"/>
+</joint>
+
+<link name="base_link">
+  <inertial>
+    <origin xyz="0.00015928609392934425 -0.0013995503284914461 0.09565139983008487" rpy="0 0 0"/>
+    <mass value="16.475311088309144"/>
+    <inertia ixx="0.344952" iyy="0.14359" izz="0.364918" ixy="1e-05" iyz="-0.002295" ixz="-2.5e-05"/>
+  </inertial>
+  <visual>
+    <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find alphabot_description)/meshes/servicebot/base_link.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find alphabot_description)/meshes/servicebot/base_link.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="caster_back_right_link">
+  <inertial>
+    <origin xyz="-6.800116025829084e-15 2.7755575615628914e-17 -0.024725104605341525" rpy="0 0 0"/>
+    <mass value="0.26633343616094135"/>
+    <inertia ixx="4.4e-05" iyy="4.4e-05" izz="4.2e-05" ixy="0.0" iyz="0.0" ixz="0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.1375 0.115 0.0" rpy="${pi/2} 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find alphabot_description)/meshes/servicebot/Caster_Wheel_back_right_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.1375 0.115 0.0" rpy="${pi/2} 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find alphabot_description)/meshes/servicebot/Caster_Wheel_back_right_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="caster_front_right_link">
+  <inertial>
+    <origin xyz="-6.827871601444713e-15 0.0 -0.024725104605341525" rpy="0 0 0"/>
+    <mass value="0.26633343616094135"/>
+    <inertia ixx="4.4e-05" iyy="4.4e-05" izz="4.2e-05" ixy="0.0" iyz="0.0" ixz="0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="-0.1375 0.115 0.0" rpy="${pi/2} 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find alphabot_description)/meshes/servicebot/Caster_Wheel_front_right_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="-0.1375 0.115 0.0" rpy="${pi/2} 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find alphabot_description)/meshes/servicebot/Caster_Wheel_front_right_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="caster_front_left_link">
+  <inertial>
+    <origin xyz="-6.827871601444713e-15 1.3877787807814457e-17 -0.024725104605341525" rpy="0 0 0"/>
+    <mass value="0.26633343616094135"/>
+    <inertia ixx="4.4e-05" iyy="4.4e-05" izz="4.2e-05" ixy="0.0" iyz="0.0" ixz="0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="-0.1375 -0.115 0.0" rpy="${pi/2} 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find alphabot_description)/meshes/servicebot/Caster_Wheel_front_left_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="-0.1375 -0.115 0.0" rpy="${pi/2} 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find alphabot_description)/meshes/servicebot/Caster_Wheel_front_left_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="caster_back_left_link">
+  <inertial>
+    <origin xyz="-6.855627177060342e-15 1.3877787807814457e-17 -0.024725104605341525" rpy="0 0 0"/>
+    <mass value="0.26633343616094135"/>
+    <inertia ixx="4.4e-05" iyy="4.4e-05" izz="4.2e-05" ixy="0.0" iyz="0.0" ixz="0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.1375 -0.115 0.0" rpy="${pi/2} 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find alphabot_description)/meshes/servicebot/Caster_Wheel_back_left_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.1375 -0.115 0.0" rpy="${pi/2} 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find alphabot_description)/meshes/servicebot/Caster_Wheel_back_left_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="wheel_left_link">
+  <inertial>
+    <origin xyz="-3.833236267638553e-07 -0.006509554140127535 3.8537422030957e-07" rpy="0 0 0"/>
+    <mass value="0.619496938546679"/>
+    <inertia ixx="0.000683" iyy="0.001171" izz="0.000683" ixy="0.0" iyz="0.0" ixz="0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.00025 0.1 -0.005999" rpy="${pi/2} 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find alphabot_description)/meshes/servicebot/left_wheel_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.00025 0.1 -0.005999" rpy="${pi/2} 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find alphabot_description)/meshes/servicebot/left_wheel_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="wheel_right_link">
+  <inertial>
+    <origin xyz="-3.826109625384251e-07 0.00650955414012741 3.853742181775949e-07" rpy="0 0 0"/>
+    <mass value="0.619496938546679"/>
+    <inertia ixx="0.000683" iyy="0.001171" izz="0.000683" ixy="0.0" iyz="0.0" ixz="0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.00025 0.1 -0.005999" rpy="${pi/2} 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find alphabot_description)/meshes/servicebot/right_wheel_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.00025 0.1 -0.005999" rpy="${pi/2} 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find alphabot_description)/meshes/servicebot/right_wheel_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="laser_link">
+  <inertial>
+    <origin xyz="1.8618140946392387e-14 8.931975391188309e-09 0.015000000000000027" rpy="0 0 0"/>
+    <mass value="1.0404071295755573"/>
+    <inertia ixx="0.000444" iyy="0.000444" izz="0.000732" ixy="0.0" iyz="0.0" ixz="0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.0 0.0 -0.108" rpy="${pi/2} 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find alphabot_description)/meshes/servicebot/laser_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.0 0.0 -0.108" rpy="${pi/2} 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find alphabot_description)/meshes/servicebot/laser_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="camera_link">
+  <inertial>
+    <origin xyz="-0.010000000000000037 -5.329070518200751e-17 -0.009999999999999988" rpy="0 0 0"/>
+    <mass value="0.0628"/>
+    <inertia ixx="4e-06" iyy="4e-06" izz="4e-06" ixy="0.0" iyz="0.0" ixz="0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="-0.207 0.0 -0.068" rpy="${pi/2} 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find alphabot_description)/meshes/servicebot/camera_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="-0.207 0.0 -0.068" rpy="${pi/2} 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find alphabot_description)/meshes/servicebot/camera_link_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="imu_link">
+  <inertial>
+    <mass value="0.001"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <inertia ixx="0.00000015" ixy="0" ixz="0" iyy="0.00000015" iyz="0" izz="0.00000015"/>
+  </inertial>
+  <visual>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <geometry>
+      <box size="0.005 0.005 0.005"/>
+    </geometry>
+  </visual>
+  <collision>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <geometry>
+      <box size="0.005 0.005 0.005"/>
+    </geometry>
+  </collision>
+</link>
+
+<joint name="caster_back_right_joint" type="fixed">
+  <origin xyz="-0.1375 -0.115 0.0" rpy="0 0 0"/>
+  <parent link="base_link"/>
+  <child link="caster_back_right_link"/>
+</joint>
+
+<joint name="caster_front_right_joint" type="fixed">
+  <origin xyz="0.1375 -0.115 0.0" rpy="0 0 0"/>
+  <parent link="base_link"/>
+  <child link="caster_front_right_link"/>
+</joint>
+
+<joint name="caster_front_left_joint" type="fixed">
+  <origin xyz="0.1375 0.115 0.0" rpy="0 0 0"/>
+  <parent link="base_link"/>
+  <child link="caster_front_left_link"/>
+</joint>
+
+<joint name="caster_back_left_joint" type="fixed">
+  <origin xyz="-0.1375 0.115 0.0" rpy="0 0 0"/>
+  <parent link="base_link"/>
+  <child link="caster_back_left_link"/>
+</joint>
+
+<joint name="wheel_left_joint" type="continuous">
+  <origin xyz="-0.00025 0.1 0.005999" rpy="0 0 0"/>
+  <parent link="base_link"/>
+  <child link="wheel_left_link"/>
+  <axis xyz="0.0 -1.0 0.0"/>
+</joint>
+
+<joint name="wheel_right_joint" type="continuous">
+  <origin xyz="-0.00025 -0.1 0.005999" rpy="0 0 0"/>
+  <parent link="base_link"/>
+  <child link="wheel_right_link"/>
+  <axis xyz="0.0 -1.0 0.0"/>
+</joint>
+
+<joint name="laser_joint" type="fixed">
+  <origin xyz="0.0 0.0 0.108" rpy="0 0 0"/>
+  <parent link="base_link"/>
+  <child link="laser_link"/>
+</joint>
+
+<joint name="camera_joint" type="fixed">
+  <origin xyz="0.207 0.0 0.068" rpy="0 0 0"/>
+  <parent link="base_link"/>
+  <child link="camera_link"/>
+</joint>
+
+<joint name="imu_joint" type="fixed">
+  <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+  <parent link="base_link"/>
+  <child link="imu_link"/>
+</joint>
+
+</robot>

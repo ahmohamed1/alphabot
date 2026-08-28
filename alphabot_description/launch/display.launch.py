@@ -4,16 +4,24 @@ from launch.actions import DeclareLaunchArgument
 from launch_ros.parameter_descriptions import ParameterValue
 import os
 from ament_index_python.packages import get_package_share_directory
-from launch_ros.parameter_descriptions import ParameterValue
-from launch.substitutions import Command, LaunchConfiguration
-
+from launch.substitutions import Command, LaunchConfiguration, PathJoinSubstitution
 
 
 def generate_launch_description():
 
+    share_dir = get_package_share_directory("alphabot_description")
+
+    robot_model_arg = DeclareLaunchArgument(
+        name="robot_model",
+        default_value=os.environ.get("ROBOT_MODEL", "alphabot"),
+        description="Robot model to display. One of ['alphabot', 'servicebot']"
+    )
+
     model_arg = DeclareLaunchArgument(
         name="model",
-        default_value=os.path.join(get_package_share_directory("alphabot_description"), "urdf", "alphabot.urdf.xacro"),
+        default_value=PathJoinSubstitution([
+            share_dir, "urdf", LaunchConfiguration("robot_model"), "robot.urdf.xacro"
+        ]),
         description='URDF file to publish'
     )
 
@@ -40,10 +48,13 @@ def generate_launch_description():
         executable='rviz2',
         name='rviz2',
         output='screen',
-        arguments=['-d', os.path.join(get_package_share_directory("alphabot_description"), "rviz", "alphabot.rviz")]
+        arguments=['-d', PathJoinSubstitution([
+            share_dir, "rviz", [LaunchConfiguration("robot_model"), ".rviz"]
+        ])]
     )
 
     return LaunchDescription([
+        robot_model_arg,
         model_arg,
         robot_state_publisher,
         joint_state_publisher,

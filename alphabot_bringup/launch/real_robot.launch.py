@@ -1,4 +1,5 @@
 import os
+import sys
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
@@ -8,8 +9,20 @@ from launch.substitutions import LaunchConfiguration
 from launch.conditions import IfCondition, UnlessCondition
 from launch.actions import TimerAction
 
+sys.path.append(os.path.dirname(__file__))
+from robot_model import get_robot_model, VALID_ROBOT_MODELS  # noqa: E402
+
 
 def generate_launch_description():
+
+    selected_model = get_robot_model()
+
+    robot_model_arg = DeclareLaunchArgument(
+        name="robot_model",
+        default_value=selected_model,
+        description=f"Robot model to bring up. One of {VALID_ROBOT_MODELS}"
+    )
+    robot_model = LaunchConfiguration("robot_model")
 
     use_sim_time_arg = DeclareLaunchArgument(name="use_sim_time", default_value="False",
                                       description="Use simulated time"
@@ -28,6 +41,7 @@ def generate_launch_description():
             "launch",
             "hardware_interface.launch.py"
         ),
+        launch_arguments={"robot_model": robot_model}.items(),
     )
 
     scanner = Node(package="xv_11_driver", executable="xv_11_driver")
@@ -118,6 +132,7 @@ def generate_launch_description():
     )
     return LaunchDescription(
         [
+            robot_model_arg,
             use_sim_time_arg,
             use_slam_arg,
             hardware_interface,

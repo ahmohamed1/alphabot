@@ -15,10 +15,16 @@ from launch_ros.parameter_descriptions import ParameterValue
 def generate_launch_description():
     alphabot_description = get_package_share_directory("alphabot_description")
 
+    robot_model_arg = DeclareLaunchArgument(
+        name="robot_model",
+        default_value=os.environ.get("ROBOT_MODEL", "alphabot"),
+        description="Robot model to spawn. One of ['alphabot', 'servicebot']"
+    )
+
     model_arg = DeclareLaunchArgument(
-        name="model", default_value=os.path.join(
-                alphabot_description, "urdf", "alphabot.urdf.xacro"
-            ),
+        name="model", default_value=PathJoinSubstitution([
+                alphabot_description, "urdf", LaunchConfiguration("robot_model"), "robot.urdf.xacro"
+            ]),
         description="Absolute path to robot urdf file"
     )
 
@@ -71,7 +77,7 @@ def generate_launch_description():
         executable="create",
         output="screen",
         arguments=["-topic", "robot_description",
-                   "-name", "alphabot"],
+                   "-name", LaunchConfiguration("robot_model")],
     )
 
     gz_ros2_bridge = Node(
@@ -88,6 +94,7 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
+        robot_model_arg,
         model_arg,
         world_name_arg,
         gazebo_resource_path,
