@@ -15,6 +15,8 @@ find_package(PkgConfig)
 find_package(rclcpp_lifecycle REQUIRED)
 find_package(hardware_interface REQUIRED)
 find_package(pluginlib REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(diagnostic_msgs REQUIRED)
 
 pkg_check_modules(SERIAL libserial)
 
@@ -34,6 +36,9 @@ ament_target_dependencies(${PROJECT_NAME}
   pluginlib
   rclcpp
   rclcpp_lifecycle
+  sensor_msgs
+  diagnostic_msgs
+  std_msgs
 )
 
 pluginlib_export_plugin_description_file(hardware_interface alphabot_interface.xml)
@@ -72,6 +77,9 @@ ament_export_dependencies(
   pluginlib
   rclcpp
   rclcpp_lifecycle
+  sensor_msgs
+  diagnostic_msgs
+  std_msgs
 )
 
 ament_package()

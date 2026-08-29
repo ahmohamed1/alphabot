@@ -1,283 +1,274 @@
 #include "alphabot_firmware/alphabot_interface.hpp"
+
+#include <cmath>
+#include <iomanip>
+#include <mutex>
+#include <sstream>
+#include <string>
+#include <vector>
+
+#include <diagnostic_msgs/msg/diagnostic_array.hpp>
 #include <hardware_interface/types/hardware_interface_type_values.hpp>
 #include <pluginlib/class_list_macros.hpp>
+#include <sensor_msgs/msg/imu.hpp>
+#include <sensor_msgs/msg/magnetic_field.hpp>
+#include <std_msgs/msg/float32.hpp>
+#include <std_msgs/msg/string.hpp>
+#include <std_msgs/msg/u_int8.hpp>
 
+namespace
+{
+std::mutex serialMutex;
+rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imuPublisher;
+rclcpp::Publisher<sensor_msgs::msg::MagneticField>::SharedPtr magneticFieldPublisher;
+rclcpp::Publisher<std_msgs::msg::UInt8>::SharedPtr bumperPublisher;
+rclcpp::Subscription<std_msgs::msg::String>::SharedPtr ledCommandSubscription;
+
+std::vector<std::string> split(const std::string &line)
+{
+  std::vector<std::string> fields;
+  std::stringstream stream(line);
+  std::string field;
+
+  while (std::getline(stream, field, ',')) {
+    fields.push_back(field);
+  }
+
+  return fields;
+}
+
+bool readDouble(const std::string &text, double &value)
+{
+  try {
+    size_t parsed = 0;
+    value = std::stod(text, &parsed);
+    return parsed == text.size() && std::isfinite(value);
+  } catch (...) {
+    return false;
+  }
+}
+}  // namespace
 
 namespace alphabot_firmware
 {
-AlphabotInterface::AlphabotInterface()
-{
-}
-
-
 AlphabotInterface::~AlphabotInterface()
 {
-  if (arduino_.IsOpen())
-  {
-    try
-    {
-      arduino_.Close();
-    }
-    catch (...)
-    {
-      RCLCPP_FATAL_STREAM(rclcpp::get_logger("AlphabotInterface"),
-                          "Something went wrong while closing connection with port " << port_);
-    }
-  }
   if (node_) {
-    rclcpp::shutdown();  // Important to shutdown
+    rclcpp::shutdown();
   }
 
   if (spinner_thread_.joinable()) {
     spinner_thread_.join();
   }
-}
 
-
-// CallbackReturn AlphabotInterface::on_configure(const hardware_interface::HardwareInfo & info)
-// {
-//   return CallbackReturn::SUCCESS;
-// }
-
-CallbackReturn AlphabotInterface::on_init(const hardware_interface::HardwareInfo &hardware_info)
-{
-    CallbackReturn result = hardware_interface::SystemInterface::on_init(hardware_info);
-    if (result != CallbackReturn::SUCCESS)
-    {
-      return result;
+  if (arduino_.IsOpen()) {
+    try {
+      std::lock_guard<std::mutex> lock(serialMutex);
+      arduino_.Close();
+    } catch (...) {
+      RCLCPP_ERROR_STREAM(rclcpp::get_logger("AlphabotInterface"), "Could not close " << port_);
     }
-
-    try
-    {
-      port_ = info_.hardware_parameters.at("port");
-    }
-    catch (const std::out_of_range &e)
-    {
-      RCLCPP_FATAL(rclcpp::get_logger("AlphabotInterface"), "No Serial Port provided! Aborting");
-      return CallbackReturn::FAILURE;
-    }
-
-    velocity_commands_.reserve(info_.joints.size());
-    position_states_.reserve(info_.joints.size());
-    velocity_states_.reserve(info_.joints.size());
-    node_ = rclcpp::Node::make_shared("alphabot_hw_node");
-
-    battery_pub_ = node_->create_publisher<std_msgs::msg::Float32>("battery_voltage", 10);
-    spinner_thread_ = std::thread([this](){
-      rclcpp::spin(node_);
-    });
-
-    return CallbackReturn::SUCCESS;
-}
-
-
-std::vector<hardware_interface::StateInterface> AlphabotInterface::export_state_interfaces()
-{
-  std::vector<hardware_interface::StateInterface> state_interfaces;
-
-  // Provide only a position Interafce
-  for (size_t i = 0; i < info_.joints.size(); i++)
-  {
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        info_.joints[i].name, hardware_interface::HW_IF_POSITION, &position_states_[i]));
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_states_[i]));
   }
-  // state_interfaces.emplace_back(hardware_interface::StateInterface(info_.joints[0].name, hardware_interface::HW_IF_POSITION, &position_states_[0]));
-  // state_interfaces.emplace_back(hardware_interface::StateInterface(info_.joints[0].name, hardware_interface::HW_IF_VELOCITY, &velocity_states_[0]));
-  // state_interfaces.emplace_back(hardware_interface::StateInterface(info_.joints[1].name, hardware_interface::HW_IF_POSITION, &position_states_[1]));
-  // state_interfaces.emplace_back(hardware_interface::StateInterface(info_.joints[1].name, hardware_interface::HW_IF_VELOCITY, &velocity_states_[1]));
-  // state_interfaces.emplace_back(hardware_interface::StateInterface("orientation_x", hardware_interface::HW_IF_POSITION,    &imu_data.orientation_x));
-  // state_interfaces.emplace_back(hardware_interface::StateInterface("orientation_y", hardware_interface::HW_IF_POSITION,    &imu_data.orientation_y));
-  // state_interfaces.emplace_back(hardware_interface::StateInterface("orientation_z", hardware_interface::HW_IF_POSITION,    &imu_data.orientation_z));
-  // state_interfaces.emplace_back(hardware_interface::StateInterface("orientation_w", hardware_interface::HW_IF_POSITION,    &imu_data.orientation_w));
-  // state_interfaces.emplace_back(hardware_interface::StateInterface("angular_velocity_x", hardware_interface::HW_IF_VELOCITY,    &imu_data.angular_velocity_x));
-  // state_interfaces.emplace_back(hardware_interface::StateInterface("angular_velocity_y", hardware_interface::HW_IF_VELOCITY,    &imu_data.angular_velocity_y));
-  // state_interfaces.emplace_back(hardware_interface::StateInterface("angular_velocity_z", hardware_interface::HW_IF_VELOCITY,    &imu_data.angular_velocity_z));
-  // state_interfaces.emplace_back(hardware_interface::StateInterface("linear_acceleration_x", hardware_interface::HW_IF_ACCELERATION, &imu_data.linear_acceleration_x));
-  // state_interfaces.emplace_back(hardware_interface::StateInterface("linear_acceleration_y", hardware_interface::HW_IF_ACCELERATION, &imu_data.linear_acceleration_y));
-  // state_interfaces.emplace_back(hardware_interface::StateInterface("linear_acceleration_z", hardware_interface::HW_IF_ACCELERATION, &imu_data.linear_acceleration_z));
-
-  return state_interfaces;
 }
 
-
-std::vector<hardware_interface::CommandInterface> AlphabotInterface::export_command_interfaces()
+CallbackReturn AlphabotInterface::on_init(const hardware_interface::HardwareInfo &hardwareInfo)
 {
-  std::vector<hardware_interface::CommandInterface> command_interfaces;
-
-  // Provide only a velocity Interafce
-  for (size_t i = 0; i < info_.joints.size(); i++)
-  {
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_commands_[i]));
+  const CallbackReturn result = hardware_interface::SystemInterface::on_init(hardwareInfo);
+  if (result != CallbackReturn::SUCCESS) {
+    return result;
   }
 
-  return command_interfaces;
-}
-
-
-CallbackReturn AlphabotInterface::on_activate(const rclcpp_lifecycle::State &)
-{
-  RCLCPP_INFO(rclcpp::get_logger("AlphabotInterface"), "Starting robot hardware ...");
-  RCLCPP_INFO_STREAM(rclcpp::get_logger("AlphabotInterface"), "New message received: "<< CONVERT_TO_RPM_FACTOR);
-    
-
-  // Reset commands and states
-  velocity_commands_ = { 0.0, 0.0 };
-  position_states_ = { 0.0, 0.0 };
-  velocity_states_ = { 0.0, 0.0 };
-  // imu_data.orientation_x = 0.0;
-  // imu_data.orientation_y = 0.0;
-  // imu_data.orientation_z =0.0;
-  // imu_data.orientation_w =0.0;
-  // imu_data.angular_velocity_x = 0.0;
-  // imu_data.angular_velocity_y = 0.0;
-  // imu_data.angular_velocity_z = 0.0;
-  // imu_data.linear_acceleration_x = 0.0;
-  // imu_data.linear_acceleration_y = 0.0;
-  // imu_data.linear_acceleration_z = 0.0;
-
-
-
-  try
-  {
-    arduino_.Open(port_);
-    arduino_.SetBaudRate(LibSerial::BaudRate::BAUD_115200);
-    
-  }
-  catch (...)
-  {
-    RCLCPP_FATAL_STREAM(rclcpp::get_logger("AlphabotInterface"),
-                        "Something went wrong while interacting with port " << port_);
+  if (info_.joints.size() != 2) {
+    RCLCPP_ERROR(rclcpp::get_logger("AlphabotInterface"), "Exactly two wheel joints are required.");
     return CallbackReturn::FAILURE;
   }
 
-  try
-  {
-    // RCLCPP_INFO_STREAM(rclcpp::get_logger("AlphabotInterface"), "New message received: "<< CONVERT_TO_RPM_FACTOR <<" , " << message_stream.str());
-    arduino_.Write("e\n");
-  }
-  catch (...)
-  {
-    RCLCPP_ERROR_STREAM(rclcpp::get_logger("AlphabotInterface"),
-                        "Something went wrong while sending the message "
-                            << "e\n" << " to the port " << port_);
-    return CallbackReturn::ERROR;
+  try {
+    port_ = info_.hardware_parameters.at("port");
+  } catch (const std::out_of_range &) {
+    RCLCPP_ERROR(rclcpp::get_logger("AlphabotInterface"), "Missing required hardware parameter: port");
+    return CallbackReturn::FAILURE;
   }
 
-  RCLCPP_INFO(rclcpp::get_logger("AlphabotInterface"),
-              "Hardware started, ready to take commands");
+  velocity_commands_.assign(2, 0.0);
+  position_states_.assign(2, 0.0);
+  velocity_states_.assign(2, 0.0);
+  node_ = rclcpp::Node::make_shared("alphabot_hw_node");
+
+  battery_pub_ = node_->create_publisher<std_msgs::msg::Float32>("battery_voltage", 10);
+  bumperPublisher = node_->create_publisher<std_msgs::msg::UInt8>("bumper_state", 10);
+  imuPublisher = node_->create_publisher<sensor_msgs::msg::Imu>("imu/data_raw", 10);
+  magneticFieldPublisher = node_->create_publisher<sensor_msgs::msg::MagneticField>("imu/mag", 10);
+
+  ledCommandSubscription = node_->create_subscription<std_msgs::msg::String>(
+      "led_command", 10,
+      [this](const std_msgs::msg::String::SharedPtr message) {
+        if (message->data.rfind("LED,", 0) != 0 || !arduino_.IsOpen()) {
+          return;
+        }
+
+        try {
+          std::lock_guard<std::mutex> lock(serialMutex);
+          arduino_.Write(message->data + "\n");
+        } catch (...) {
+          RCLCPP_ERROR(rclcpp::get_logger("AlphabotInterface"), "Could not send LED command.");
+        }
+      });
+
+  spinner_thread_ = std::thread([this]() { rclcpp::spin(node_); });
   return CallbackReturn::SUCCESS;
 }
 
+std::vector<hardware_interface::StateInterface> AlphabotInterface::export_state_interfaces()
+{
+  std::vector<hardware_interface::StateInterface> interfaces;
+
+  for (size_t index = 0; index < info_.joints.size(); ++index) {
+    interfaces.emplace_back(info_.joints[index].name, hardware_interface::HW_IF_POSITION, &position_states_[index]);
+    interfaces.emplace_back(info_.joints[index].name, hardware_interface::HW_IF_VELOCITY, &velocity_states_[index]);
+  }
+
+  return interfaces;
+}
+
+std::vector<hardware_interface::CommandInterface> AlphabotInterface::export_command_interfaces()
+{
+  std::vector<hardware_interface::CommandInterface> interfaces;
+
+  for (size_t index = 0; index < info_.joints.size(); ++index) {
+    interfaces.emplace_back(info_.joints[index].name, hardware_interface::HW_IF_VELOCITY, &velocity_commands_[index]);
+  }
+
+  return interfaces;
+}
+
+CallbackReturn AlphabotInterface::on_activate(const rclcpp_lifecycle::State &)
+{
+  try {
+    std::lock_guard<std::mutex> lock(serialMutex);
+    arduino_.Open(port_);
+    arduino_.SetBaudRate(LibSerial::BaudRate::BAUD_115200);
+    arduino_.Write("S,0.000,0.000\n");
+  } catch (...) {
+    RCLCPP_ERROR_STREAM(rclcpp::get_logger("AlphabotInterface"), "Could not open " << port_);
+    return CallbackReturn::FAILURE;
+  }
+
+  return CallbackReturn::SUCCESS;
+}
 
 CallbackReturn AlphabotInterface::on_deactivate(const rclcpp_lifecycle::State &)
 {
-  RCLCPP_INFO(rclcpp::get_logger("AlphabotInterface"), "Stopping robot hardware ...");
-
-  if (arduino_.IsOpen())
-  {
-    try
-    {
+  try {
+    std::lock_guard<std::mutex> lock(serialMutex);
+    if (arduino_.IsOpen()) {
+      arduino_.Write("S,0.000,0.000\nSTOP\n");
       arduino_.Close();
     }
-    catch (...)
-    {
-      RCLCPP_FATAL_STREAM(rclcpp::get_logger("AlphabotInterface"),
-                          "Something went wrong while closing connection with port " << port_);
-    }
+  } catch (...) {
+    RCLCPP_ERROR_STREAM(rclcpp::get_logger("AlphabotInterface"), "Could not close " << port_);
+    return CallbackReturn::FAILURE;
   }
 
-  RCLCPP_INFO(rclcpp::get_logger("AlphabotInterface"), "Hardware stopped");
   return CallbackReturn::SUCCESS;
 }
 
-
-hardware_interface::return_type AlphabotInterface::read(const rclcpp::Time &,
-                                                          const rclcpp::Duration &)
+hardware_interface::return_type AlphabotInterface::read(const rclcpp::Time &, const rclcpp::Duration &period)
 {
-  // Interpret the string
-  if(arduino_.IsDataAvailable())
-  {
-    auto dt = (rclcpp::Clock().now() - last_run_).seconds();
-    std::string message;
-    arduino_.ReadLine(message);
-    std::stringstream ss(message);
-    std::string res;
-    int multiplier = 1;
-    // RCLCPP_INFO(rclcpp::get_logger("AlphabotInterface"), "Received: %s", message.c_str());
-    while(std::getline(ss, res, ','))
-    {
-      multiplier = res.at(1) == 'p' ? 1 : -1;
-
-      if(res.at(0) == 'r')
-      {
-        velocity_states_.at(0) = multiplier * std::stod(res.substr(2, res.size()));
-        position_states_.at(0) += velocity_states_.at(0) * dt;
-        // RCLCPP_INFO(rclcpp::get_logger("AlphabotInterface"), "Right Wheel Position: %f", position_states_.at(0));
-      }
-      else if(res.at(0) == 'l')
-      {
-        velocity_states_.at(1) = multiplier * std::stod(res.substr(2, res.size()));
-        position_states_.at(1) += velocity_states_.at(1) * dt;
-        // RCLCPP_INFO(rclcpp::get_logger("AlphabotInterface"), "Left Wheel Position: %f", position_states_.at(1));
-      }else if (res.at(0) == 'v')
-      {
-        float voltage = std::stof(res.substr(1));
-        std_msgs::msg::Float32 msg;
-        msg.data = voltage;
-        battery_pub_->publish(msg);
-      }
+  while (arduino_.IsOpen() && arduino_.IsDataAvailable()) {
+    std::string line;
+    try {
+      std::lock_guard<std::mutex> lock(serialMutex);
+      arduino_.ReadLine(line);
+    } catch (...) {
+      return hardware_interface::return_type::ERROR;
     }
-    last_run_ = rclcpp::Clock().now();
+
+    // Print the raw Pico line before parsing. Remove line terminators only so
+    // each received message appears on one ROS log line.
+    while (!line.empty() && (line.back() == '\n' || line.back() == '\r')) {
+      line.pop_back();
+    }
+    // RCLCPP_INFO(node_->get_logger(), "Pico RX: [%s]", line.c_str());
+
+    const std::vector<std::string> fields = split(line);
+    if (fields.empty()) {
+      continue;
+    }
+
+    // STATE,left_speed,right_speed,battery_voltage,bumper_left,bumper_right,
+    // accel_x,accel_y,accel_z,gyro_x,gyro_y,gyro_z,mag_x,mag_y,mag_z,temperature
+    if (fields[0] == "STATE" && fields.size() == 16) {
+      double values[15];
+      bool valid = true;
+      for (size_t index = 0; index < 15; ++index) {
+        valid = valid && readDouble(fields[index + 1], values[index]);
+      }
+      if (!valid) {
+        RCLCPP_WARN(node_->get_logger(), "Ignoring malformed Pico STATE message");
+        continue;
+      }
+
+      const double leftSpeed = values[0];
+      const double rightSpeed = values[1];
+
+      // Existing interface ordering: index 0 is right, index 1 is left.
+      velocity_states_[0] = rightSpeed;
+      velocity_states_[1] = leftSpeed;
+      position_states_[0] += rightSpeed * period.seconds();
+      position_states_[1] += leftSpeed * period.seconds();
+
+      std_msgs::msg::Float32 battery;
+      battery.data = static_cast<float>(values[2]);
+      battery_pub_->publish(battery);
+
+      const bool leftPressed = values[3] != 0.0;
+      const bool rightPressed = values[4] != 0.0;
+      std_msgs::msg::UInt8 bumper;
+      bumper.data = static_cast<uint8_t>(
+          (leftPressed ? 0x01 : 0x00) | (rightPressed ? 0x02 : 0x00));
+      bumperPublisher->publish(bumper);
+
+      const rclcpp::Time stamp = node_->now();
+      sensor_msgs::msg::Imu imu;
+      imu.header.stamp = stamp;
+      imu.header.frame_id = "imu_link";
+      imu.orientation_covariance[0] = -1.0;
+      imu.linear_acceleration.x = values[5];
+      imu.linear_acceleration.y = values[6];
+      imu.linear_acceleration.z = values[7];
+      imu.angular_velocity.x = values[8];
+      imu.angular_velocity.y = values[9];
+      imu.angular_velocity.z = values[10];
+      imuPublisher->publish(imu);
+
+      sensor_msgs::msg::MagneticField magneticField;
+      magneticField.header.stamp = stamp;
+      magneticField.header.frame_id = "imu_link";
+      magneticField.magnetic_field.x = values[11];
+      magneticField.magnetic_field.y = values[12];
+      magneticField.magnetic_field.z = values[13];
+      magneticFieldPublisher->publish(magneticField);
+    } else {
+      RCLCPP_WARN(node_->get_logger(), "Ignoring unknown Pico message: [%s]", line.c_str());
+    }
   }
 
-  
-  // }
   return hardware_interface::return_type::OK;
 }
 
-
-hardware_interface::return_type AlphabotInterface::write(const rclcpp::Time &,
-                                                          const rclcpp::Duration &)
+hardware_interface::return_type AlphabotInterface::write(const rclcpp::Time &, const rclcpp::Duration &)
 {
-// Implement communication protocol with the Arduino
-  std::stringstream message_stream;
-  char right_wheel_sign = velocity_commands_.at(0) >= 0 ? 'p' : 'n';
-  char left_wheel_sign = velocity_commands_.at(1) >= 0 ? 'p' : 'n';
-  std::string compensate_zeros_right = "";
-  std::string compensate_zeros_left = "";
-  if(std::abs(velocity_commands_.at(0)) < 10.0)
-  {
-    compensate_zeros_right = "0";
-  }
-  else
-  {
-    compensate_zeros_right = "";
-  }
-  if(std::abs(velocity_commands_.at(1)) < 10.0)
-  {
-    compensate_zeros_left = "0";
-  }
-  else
-  {
-    compensate_zeros_left = "";
-  }
-  
-  message_stream << std::fixed << std::setprecision(2) << 
-    "r" << right_wheel_sign << compensate_zeros_right << std::abs(velocity_commands_.at(0)) << 
-    ",l" <<  left_wheel_sign << compensate_zeros_left << std::abs(velocity_commands_.at(1)) << ",";
+  const double rightSpeed = std::isfinite(velocity_commands_[0]) ? velocity_commands_[0] : 0.0;
+  const double leftSpeed = std::isfinite(velocity_commands_[1]) ? velocity_commands_[1] : 0.0;
+  std::ostringstream command;
+  command << std::fixed << std::setprecision(3) << "S," << leftSpeed << "," << rightSpeed << "\n";
 
-  try
-  {
-    arduino_.Write(message_stream.str());
-  }
-  catch (...)
-  {
-    RCLCPP_ERROR_STREAM(rclcpp::get_logger("AlphabotInterface"),
-                        "Something went wrong while sending the message "
-                            << message_stream.str() << " to the port " << port_);
+  try {
+    std::lock_guard<std::mutex> lock(serialMutex);
+    arduino_.Write(command.str());
+  } catch (...) {
+    RCLCPP_ERROR_STREAM(rclcpp::get_logger("AlphabotInterface"), "Could not send " << command.str());
     return hardware_interface::return_type::ERROR;
   }
 
