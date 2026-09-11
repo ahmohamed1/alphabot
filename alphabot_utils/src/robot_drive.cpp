@@ -190,7 +190,7 @@ bool turnOdom(bool clockwise, double degrees)
 int main(int argc, char **argv)
 {
 
-  float distance = 0.5;
+  float distance = 0.2;
 
   std::cout<<distance<<std::endl;
   // Initialize the ROS 2 node

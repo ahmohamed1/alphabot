@@ -28,13 +28,24 @@ alphabot_controller:
     pose_covariance_diagonal : [0.001, 0.001, 1.0e-3, 1.0e-3, 1.0e-3, 0.01]
     twist_covariance_diagonal: [0.001, 0.001, 1.0e-3, 1.0e-3, 1.0e-3, 0.01]
 
-    # TODO: PLACEHOLDER GEOMETRY. servicebot's wheel separation/radius were not
-    # measurable from the CAD-exported xacro (the true offsets are baked into
-    # the STL meshes, not the joint origins). Calibrate against the real/CAD
-    # model before trusting odometry, and update these two values.
-    wheel_separation : 0.23
-    wheel_radius : 0.075
+    # GEOMETRY (calibrated from the CAD mesh, 2026-09-04).
+    #   wheel_radius     : measured from left/right_wheel_1.stl disc plane
+    #                      -> diameter 101.98 mm => radius 0.0510 m.
+    #   wheel_separation : from the URDF wheel joint origins
+    #                      (wheel_left_joint y=+0.1, wheel_right_joint y=-0.1)
+    #                      => 0.200 m.
+    # These are the CAD/nominal values. For fine-tuning against the real robot
+    # (tire slip, effective rolling radius, wheelbase), override the *_multiplier
+    # params below at launch time (see alphabot_firmware/launch/hardware_interface.launch.py)
+    # rather than editing this file.
+    wheel_separation : 0.20
+    wheel_radius : 0.05258
 
+    # Calibration multipliers (default 1.0 = use the nominal values above).
+    #   wheel_separation_multiplier  : scales wheel_separation
+    #   left/right_wheel_radius_multiplier : per-wheel radius scale (catches
+    #   left/right asymmetry / different tire wear).
+    # e.g. if the robot turns slightly wide, raise wheel_separation_multiplier.
     wheel_separation_multiplier: 1.0
     left_wheel_radius_multiplier: 1.0
     right_wheel_radius_multiplier: 1.0

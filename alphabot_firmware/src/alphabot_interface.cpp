@@ -146,9 +146,13 @@ CallbackReturn AlphabotInterface::on_activate(const rclcpp_lifecycle::State &)
 {
   try {
     std::lock_guard<std::mutex> lock(serialMutex);
+
     arduino_.Open(port_);
     arduino_.SetBaudRate(LibSerial::BaudRate::BAUD_115200);
+    pico_connection_confirmed_ = false;
     arduino_.Write("S,0.000,0.000\n");
+    arduino_.Write("RESET_STATE\n");
+
   } catch (...) {
     RCLCPP_ERROR_STREAM(rclcpp::get_logger("AlphabotInterface"), "Could not open " << port_);
     return CallbackReturn::FAILURE;
@@ -196,61 +200,201 @@ hardware_interface::return_type AlphabotInterface::read(const rclcpp::Time &, co
       continue;
     }
 
-    // STATE,left_speed,right_speed,battery_voltage,bumper_left,bumper_right,
-    // accel_x,accel_y,accel_z,gyro_x,gyro_y,gyro_z,mag_x,mag_y,mag_z,temperature
-    if (fields[0] == "STATE" && fields.size() == 16) {
-      double values[15];
-      bool valid = true;
-      for (size_t index = 0; index < 15; ++index) {
-        valid = valid && readDouble(fields[index + 1], values[index]);
+    // If change the LED to solid blue to tell the connection is healthy
+    if (!pico_connection_confirmed_) {
+      try {
+        std::lock_guard<std::mutex> lock(serialMutex);
+
+        arduino_.Write("LED,RGB,0,0,255\n");
+        arduino_.Write("RESET_STATE\n");
+        pico_connection_confirmed_ = true;
+
+        RCLCPP_INFO(
+          node_->get_logger(),
+          "Pico connection confirmed - LED set to BLUE");
+
+      } catch (...) {
+        RCLCPP_ERROR(
+          node_->get_logger(),
+          "Pico connection detected, but could not send LED confirmation");
       }
-      if (!valid) {
-        RCLCPP_WARN(node_->get_logger(), "Ignoring malformed Pico STATE message");
+    }
+
+    // ============================================================
+    // STATE,left_speed,right_speed,battery_voltage,bumper_left,
+    // bumper_right,accel_x,accel_y,accel_z,gyro_x,gyro_y,gyro_z,
+    // mag_x,mag_y,mag_z,temperature,left_count,right_count
+    // ============================================================
+
+    if (fields[0] == "STATE" && fields.size() == 18)
+    {
+      double values[17];
+      bool valid = true;
+
+      for (size_t index = 0; index < 17; ++index)
+      {
+        valid = valid && readDouble(
+          fields[index + 1],
+          values[index]
+        );
+      }
+
+      if (!valid)
+      {
+        RCLCPP_WARN(
+          node_->get_logger(),
+          "Ignoring malformed Pico STATE message");
+
         continue;
       }
 
-      const double leftSpeed = values[0];
+      // ==========================================================
+      // VELOCITY
+      // ==========================================================
+
+      const double leftSpeed  = values[0];
       const double rightSpeed = values[1];
 
-      // Existing interface ordering: index 0 is right, index 1 is left.
-      velocity_states_[0] = rightSpeed;
-      velocity_states_[1] = leftSpeed;
-      position_states_[0] += rightSpeed * period.seconds();
-      position_states_[1] += leftSpeed * period.seconds();
+      // Existing interface ordering:
+      // index 1 = right
+      // index 0 = left
+
+      velocity_states_[1] = rightSpeed;
+      velocity_states_[0] = leftSpeed;
+
+
+      // ==========================================================
+      // ENCODER COUNTS
+      // ==========================================================
+
+      const int32_t leftCount =
+        static_cast<int32_t>(values[15]);
+
+      const int32_t rightCount =
+        static_cast<int32_t>(values[16]);
+
+
+      // ==========================================================
+      // ENCODER → JOINT POSITION
+      // ==========================================================
+      //
+      // PIO uses x4 quadrature decoding.
+      //
+      // 990 encoder pulses × 4 = 3960 counts/revolution
+      //
+
+      constexpr double ENCODER_COUNTS_PER_REV = 3960.0;
+      constexpr double TWO_PI = 2.0 * M_PI;
+
+      const double leftPosition =
+        (static_cast<double>(leftCount) /
+        ENCODER_COUNTS_PER_REV) * TWO_PI;
+
+      const double rightPosition =
+        (static_cast<double>(rightCount) /
+        ENCODER_COUNTS_PER_REV) * TWO_PI;
+
+
+      // ROS interface ordering:
+      // position_states_[1] = right wheel
+      // position_states_[0] = left wheel
+
+      position_states_[0] = leftPosition;
+      position_states_[1] = rightPosition;
+
+
+      // ==========================================================
+      // DEBUG
+      // ==========================================================
+
+      // RCLCPP_INFO_THROTTLE(
+      //   node_->get_logger(),
+      //   *node_->get_clock(),
+      //   1000,
+      //   "Encoder counts: L=%d R=%d | Position: L=%.3f rad R=%.3f rad",
+      //   leftCount,
+      //   rightCount,
+      //   leftPosition,
+      //   rightPosition);
+
+
+      // ==========================================================
+      // BATTERY
+      // ==========================================================
 
       std_msgs::msg::Float32 battery;
       battery.data = static_cast<float>(values[2]);
       battery_pub_->publish(battery);
 
-      const bool leftPressed = values[3] != 0.0;
+
+      // ==========================================================
+      // BUMPERS
+      // ==========================================================
+
+      const bool leftPressed  = values[3] != 0.0;
       const bool rightPressed = values[4] != 0.0;
+
       std_msgs::msg::UInt8 bumper;
+
       bumper.data = static_cast<uint8_t>(
-          (leftPressed ? 0x01 : 0x00) | (rightPressed ? 0x02 : 0x00));
+        (leftPressed ? 0x01 : 0x00) |
+        (rightPressed ? 0x02 : 0x00)
+      );
+
       bumperPublisher->publish(bumper);
 
+
+      // ==========================================================
+      // IMU
+      // ==========================================================
+
       const rclcpp::Time stamp = node_->now();
+
       sensor_msgs::msg::Imu imu;
+
       imu.header.stamp = stamp;
       imu.header.frame_id = "imu_link";
+
       imu.orientation_covariance[0] = -1.0;
+
       imu.linear_acceleration.x = values[5];
       imu.linear_acceleration.y = values[6];
       imu.linear_acceleration.z = values[7];
+
       imu.angular_velocity.x = values[8];
       imu.angular_velocity.y = values[9];
       imu.angular_velocity.z = values[10];
+
       imuPublisher->publish(imu);
 
+
+      // ==========================================================
+      // MAGNETOMETER
+      // ==========================================================
+
       sensor_msgs::msg::MagneticField magneticField;
+
       magneticField.header.stamp = stamp;
       magneticField.header.frame_id = "imu_link";
+
       magneticField.magnetic_field.x = values[11];
       magneticField.magnetic_field.y = values[12];
       magneticField.magnetic_field.z = values[13];
+
       magneticFieldPublisher->publish(magneticField);
-    } else {
-      RCLCPP_WARN(node_->get_logger(), "Ignoring unknown Pico message: [%s]", line.c_str());
+    }
+    else if (line == "RESET_STATE_OK")
+    {
+        RCLCPP_INFO(
+          node_->get_logger(),
+          "Pico state reset confirmed");
+    }
+    else
+    {
+      RCLCPP_WARN(
+        node_->get_logger(),
+        "Ignoring unknown Pico message: [%s]",
+        line.c_str());
     }
   }
 

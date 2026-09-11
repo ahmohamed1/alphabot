@@ -35,6 +35,7 @@ public:
   hardware_interface::return_type write(const rclcpp::Time &, const rclcpp::Duration &) override;
 
 private:
+  bool pico_connection_confirmed_{false};
   rclcpp::Node::SharedPtr node_;
   rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr battery_pub_;
   std::thread spinner_thread_;

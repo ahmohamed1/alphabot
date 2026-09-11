@@ -61,6 +61,7 @@ install(
 
 install(PROGRAMS
   ${PROJECT_NAME}/mpu6050_driver.py
+  ${PROJECT_NAME}/calibrate_odometry.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
