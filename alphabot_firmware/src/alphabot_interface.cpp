@@ -356,6 +356,12 @@ hardware_interface::return_type AlphabotInterface::read(const rclcpp::Time &, co
       imu.header.frame_id = "imu_link";
 
       imu.orientation_covariance[0] = -1.0;
+      imu.angular_velocity_covariance[0] = 0.01;
+      imu.angular_velocity_covariance[4] = 0.01;
+      imu.angular_velocity_covariance[8] = 0.01;
+      imu.linear_acceleration_covariance[0] = 0.1;
+      imu.linear_acceleration_covariance[4] = 0.1;
+      imu.linear_acceleration_covariance[8] = 0.1;
 
       imu.linear_acceleration.x = values[5];
       imu.linear_acceleration.y = values[6];
