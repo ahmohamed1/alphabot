@@ -15,6 +15,12 @@ def generate_launch_description():
         description="Robot model to bring up. One of ['alphabot', 'servicebot']"
     )
 
+    serial_device_arg = DeclareLaunchArgument(
+        name="serial_device",
+        default_value=os.environ.get("SERIAL_DEVICE", "/dev/ttyACM0"),
+        description="Pico serial device: /dev/ttyACM0 for USB or /dev/serial0 for GPIO UART",
+    )
+
     robot_description = ParameterValue(
         Command(
             [
@@ -25,7 +31,9 @@ def generate_launch_description():
                     LaunchConfiguration("robot_model"),
                     "robot.urdf.xacro",
                 ]),
-                " is_sim:=False"
+                " is_sim:=False",
+                " serial_device:=",
+                LaunchConfiguration("serial_device"),
             ]
         ),
         value_type=str,
@@ -57,6 +65,7 @@ def generate_launch_description():
     return LaunchDescription(
         [
             robot_model_arg,
+            serial_device_arg,
             robot_state_publisher_node,
             controller_manager,
         ]

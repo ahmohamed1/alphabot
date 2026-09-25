@@ -6,6 +6,7 @@
 
 <!-- Load Simulated or Real Hardware Interfaces -->
 <xacro:arg name="is_sim" default="true"/>
+<xacro:arg name="serial_device" default="/dev/ttyACM0"/>
 
 <xacro:include filename="$(find alphabot_description)/urdf/servicebot/materials.xacro" />
 <xacro:include filename="$(find alphabot_description)/urdf/servicebot/servicebot_ros2_control.xacro" />

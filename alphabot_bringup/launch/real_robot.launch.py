@@ -25,6 +25,12 @@ def generate_launch_description():
     robot_model = LaunchConfiguration("robot_model")
     is_servicebot = PythonExpression(["'", robot_model, "' == 'servicebot'"])
 
+    serial_device_arg = DeclareLaunchArgument(
+        "serial_device",
+        default_value=os.environ.get("SERIAL_DEVICE", "/dev/ttyACM0"),
+        description="Pico serial device: /dev/ttyACM0 for USB or /dev/serial0 for GPIO UART",
+    )
+
     scan_min_range_arg = DeclareLaunchArgument(
         "scan_min_range", default_value="0.20",
         description="Discard all LiDAR returns closer than this distance in meters",
@@ -67,7 +73,10 @@ def generate_launch_description():
             "launch",
             "hardware_interface.launch.py"
         ),
-        launch_arguments={"robot_model": robot_model}.items(),
+        launch_arguments={
+            "robot_model": robot_model,
+            "serial_device": LaunchConfiguration("serial_device"),
+        }.items(),
     )
 
     scanner = Node(
@@ -186,6 +195,7 @@ def generate_launch_description():
     return LaunchDescription(
         [
             robot_model_arg,
+            serial_device_arg,
             scan_min_range_arg,
             scan_wall_max_range_arg,
             scan_left_wall_min_angle_arg,
