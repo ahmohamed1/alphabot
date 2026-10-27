@@ -7,19 +7,30 @@
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
-  <!-- Top Status & Safety Header -->
+  <!-- Compact Top Header & Telemetry Bar -->
   <header class="topbar">
-    <div class="brand">
-      <span class="brand-dot" id="connDot"></span>
-      <div>
-        <h1>AlphaBot Control Center</h1>
-        <small id="lanUrlText">Connecting to robot...</small>
+    <div class="topbar-main">
+      <div class="brand">
+        <span class="brand-dot" id="connDot"></span>
+        <div>
+          <h1>ServiceBot Control</h1>
+          <small id="lanUrlText">Connecting...</small>
+        </div>
+      </div>
+
+      <div class="safety-actions">
+        <button id="btnSafetyLock" class="btn btn-outline-warn" onclick="toggleSafetyLock()">
+          🔓 Lock: OFF
+        </button>
+        <button class="btn btn-estop" onclick="triggerEstop()">
+          🛑 E-STOP
+        </button>
       </div>
     </div>
 
     <div class="telemetry-strip">
       <div class="stat-pill">
-        <span class="label">Robot Model</span>
+        <span class="label">Robot</span>
         <strong id="robotModelText" class="badge">servicebot</strong>
       </div>
       <div class="stat-pill">
@@ -27,7 +38,7 @@
         <strong id="modeBadge" class="badge mode-nav">NAVIGATION</strong>
       </div>
       <div class="stat-pill">
-        <span class="label">Active Map</span>
+        <span class="label">Map</span>
         <strong id="activeMapText">small_house</strong>
       </div>
       <div class="stat-pill">
@@ -43,23 +54,14 @@
         <strong id="velText">0.00 m/s | 0.00 rad/s</strong>
       </div>
     </div>
-
-    <div class="safety-actions">
-      <button id="btnSafetyLock" class="btn btn-outline-warn" onclick="toggleSafetyLock()">
-        🔓 Safety Lock: OFF
-      </button>
-      <button class="btn btn-estop" onclick="triggerEstop()">
-        🛑 E-STOP
-      </button>
-    </div>
   </header>
 
   <!-- Main Workspace -->
   <main class="workspace">
-    <!-- Left Control Sidebar -->
-    <aside class="sidebar">
+    <!-- Left Control Sidebar (Desktop) / Bottom Sheet (Phone) -->
+    <aside class="sidebar" id="controlSidebar">
       <!-- 1. Mode & Map Management -->
-      <section class="panel">
+      <section class="panel" data-mobile-tab="mode">
         <div class="panel-header">
           <h2>1. Mapping &amp; Mode Control</h2>
         </div>
@@ -90,7 +92,7 @@
       </section>
 
       <!-- 2. Saved Named Locations (Waypoints) -->
-      <section class="panel panel-grow">
+      <section class="panel panel-grow" data-mobile-tab="locations">
         <div class="panel-header">
           <h2>2. Saved Locations</h2>
           <span class="count-tag" id="wpCount">0</span>
@@ -102,14 +104,14 @@
             <input type="text" id="wpNameInput" placeholder="e.g. Kitchen, Charging Dock" />
             <button class="btn btn-primary" onclick="saveCurrentRobotPose()">+ Save Here</button>
           </div>
-          <small class="hint">Tip: You can also use "📌 Pin Location" on the map to click &amp; drag any point.</small>
+          <small class="hint">Tip: Or use "📌 Pin" on the map to tap &amp; drag any point.</small>
         </div>
 
         <div id="wpList" class="waypoint-list"></div>
       </section>
 
       <!-- 3. Quick Relocalization (Initial Pose) -->
-      <section class="panel">
+      <section class="panel" data-mobile-tab="locations">
         <div class="panel-header">
           <h2>3. Localization (Initial Pose)</h2>
         </div>
@@ -124,58 +126,74 @@
     </aside>
 
     <!-- Interactive Map Viewport -->
-    <section class="map-stage">
+    <section class="map-stage" id="mapStage">
       <!-- Map Interaction Toolbar -->
       <div class="map-toolbar">
-        <button id="toolGoal" class="tool-btn active" onclick="setMapTool('GOAL')" title="Click & drag on map to send robot">
+        <button id="toolGoal" class="tool-btn active" onclick="setMapTool('GOAL')" title="Tap or drag on map to send robot">
           🚀 Send Goal
         </button>
-        <button id="toolSaveWp" class="tool-btn" onclick="setMapTool('SAVE_WP')" title="Click & drag on map to save a named location">
-          📌 Pin Location
+        <button id="toolSaveWp" class="tool-btn" onclick="setMapTool('SAVE_WP')" title="Tap or drag on map to save a named location">
+          📌 Pin
         </button>
-        <button id="toolInitPose" class="tool-btn" onclick="setMapTool('INIT_POSE')" title="Click & drag on map to set 2D Pose Estimate">
-          🧭 2D Pose Estimate
+        <button id="toolInitPose" class="tool-btn" onclick="setMapTool('INIT_POSE')" title="Tap & drag on map to set 2D Pose Estimate">
+          🧭 2D Pose
         </button>
         <button id="toolPan" class="tool-btn" onclick="setMapTool('PAN')" title="Drag to pan map">
-          ✋ Pan Map
+          ✋ Pan
         </button>
         <div class="toolbar-divider"></div>
         <button class="tool-btn" onclick="zoomMap(1.25)" title="Zoom In">➕</button>
         <button class="tool-btn" onclick="zoomMap(0.8)" title="Zoom Out">➖</button>
         <button class="tool-btn" onclick="fitMapToScreen()" title="Reset View">🔍 Fit</button>
         <button class="tool-btn btn-cancel-nav" onclick="cancelNavigation()" title="Cancel active Nav2 goal">
-          ⏹ Cancel Goal
+          ⏹ Stop Nav
         </button>
       </div>
+
+      <!-- Quick Saved-Location Chips on Map (1-tap navigation on phone) -->
+      <div class="quick-wp-strip" id="quickWpStrip"></div>
 
       <!-- Map Canvas -->
       <canvas id="mapCanvas"></canvas>
 
       <!-- Map Legend & Cursor Coordinates -->
       <div class="map-footer-info">
-        <span><i class="dot dot-robot"></i> Robot</span>
-        <span><i class="dot dot-lidar"></i> LiDAR (`/scan`)</span>
-        <span><i class="dot dot-path"></i> Nav2 Path</span>
-        <span><i class="dot dot-wp"></i> Saved Point</span>
+        <span><i class="dot dot-robot"></i>Robot</span>
+        <span><i class="dot dot-lidar"></i>LiDAR</span>
+        <span><i class="dot dot-path"></i>Path</span>
+        <span><i class="dot dot-wp"></i>Pin</span>
         <span id="cursorCoords">X: 0.00 m, Y: 0.00 m</span>
       </div>
 
       <!-- Virtual Teleop Joystick Card -->
-      <div class="teleop-dock">
+      <div class="teleop-dock" id="teleopDock">
         <div class="teleop-header">
-          <span>🕹️ Teleop (`WASD` / Touch)</span>
-          <label class="speed-slider-label">
-            Max: <strong id="maxSpeedVal">0.35</strong> m/s
-            <input type="range" id="maxSpeedSlider" min="0.10" max="0.50" step="0.05" value="0.35" />
-          </label>
+          <span>🕹️ Speed: <strong id="maxSpeedVal">0.35</strong> m/s</span>
+          <button class="joy-min-btn" onclick="toggleJoystickCollapse()" id="joyToggleBtn" title="Minimize/Expand Joystick">−</button>
         </div>
-        <div class="joystick-base" id="joystickBase">
-          <div class="joystick-crosshair"></div>
-          <div class="joystick-Stick" id="joystickStick"></div>
+        <div id="teleopBody" class="teleop-body">
+          <input type="range" id="maxSpeedSlider" min="0.10" max="0.40" step="0.05" value="0.35" />
+          <div class="joystick-base" id="joystickBase">
+            <div class="joystick-crosshair"></div>
+            <div class="joystick-Stick" id="joystickStick"></div>
+          </div>
         </div>
       </div>
     </section>
   </main>
+
+  <!-- Mobile Bottom Navigation Bar (Visible on phones/tablets <= 850px) -->
+  <nav class="mobile-bottom-nav" id="mobileBottomNav">
+    <button class="mob-tab active" id="mobTabMap" onclick="setMobileTab('map')">
+      🗺️ Full Map
+    </button>
+    <button class="mob-tab" id="mobTabLocations" onclick="setMobileTab('locations')">
+      📍 Locations (<span id="mobWpCount">0</span>)
+    </button>
+    <button class="mob-tab" id="mobTabMode" onclick="setMobileTab('mode')">
+      ⚙️ Mode &amp; Maps
+    </button>
+  </nav>
 
   <!-- Modal for naming a clicked map location -->
   <div id="wpModal" class="modal-backdrop hidden">

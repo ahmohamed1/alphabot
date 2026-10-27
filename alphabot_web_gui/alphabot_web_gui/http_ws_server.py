@@ -319,15 +319,18 @@ class AsyncHttpWsServer:
             return
 
         # Serve static files from web/
-        if method == "GET":
+        if method in ("GET", "HEAD"):
             rel = "index.html" if path in ("/", "") else path.lstrip("/")
+            if rel == "favicon.ico":
+                await self._send_response(writer, 204, b"", "image/x-icon")
+                return
             target_file = (self.static_dir / rel).resolve()
             if (
                 str(target_file).startswith(str(self.static_dir.resolve()))
                 and target_file.is_file()
             ):
                 mime, _ = mimetypes.guess_type(str(target_file))
-                content = target_file.read_bytes()
+                content = target_file.read_bytes() if method == "GET" else b""
                 await self._send_response(
                     writer, 200, content, mime or "application/octet-stream"
                 )

@@ -170,7 +170,7 @@ def test_gateway_http_and_websocket_integration(tmp_path: Path):
                 html = await asyncio.to_thread(
                     lambda: urllib.request.urlopen(f"{base_url}/").read().decode("utf-8")
                 )
-                assert "AlphaBot Control Center" in html
+                assert "ServiceBot" in html
 
                 # 2. Save a named location via HTTP POST /api/waypoints
                 def post_json(path: str, payload: dict):

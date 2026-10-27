@@ -139,7 +139,7 @@ function applyTelemetry(data) {
   }
 
   const lockBtn = document.getElementById("btnSafetyLock");
-  lockBtn.textContent = safetyLocked ? "🔒 Safety Lock: ON" : "🔓 Safety Lock: OFF";
+  lockBtn.textContent = safetyLocked ? "🔒 Lock: ON" : "🔓 Lock: OFF";
   lockBtn.classList.toggle("locked", safetyLocked);
 
   scanPoints = data.scan || [];
@@ -157,6 +157,34 @@ function applyTelemetry(data) {
     };
     mapImage.src = "data:image/png;base64," + data.map.image_b64;
   }
+}
+
+// ==========================================
+// Mobile Tab / Sheet Switcher & Joystick Toggle
+// ==========================================
+function setMobileTab(tab) {
+  const sidebar = document.getElementById("controlSidebar");
+  const panels = sidebar.querySelectorAll(".panel");
+  document.getElementById("mobTabMap").classList.toggle("active", tab === "map");
+  document.getElementById("mobTabLocations").classList.toggle("active", tab === "locations");
+  document.getElementById("mobTabMode").classList.toggle("active", tab === "mode");
+
+  if (tab === "map") {
+    sidebar.classList.remove("mobile-open");
+  } else {
+    sidebar.classList.add("mobile-open");
+    panels.forEach((p) => {
+      p.style.display = p.dataset.mobileTab === tab ? "flex" : "none";
+    });
+  }
+  setTimeout(fitMapToScreen, 60);
+}
+
+function toggleJoystickCollapse() {
+  const body = document.getElementById("teleopBody");
+  const btn = document.getElementById("joyToggleBtn");
+  const collapsed = body.classList.toggle("collapsed");
+  btn.textContent = collapsed ? "+" : "−";
 }
 
 // ==========================================
@@ -178,18 +206,20 @@ function canvasToWorld(cx, cy) {
 
 function fitMapToScreen() {
   if (!mapMeta) return;
-  canvas.width = canvas.parentElement.clientWidth;
-  canvas.height = canvas.parentElement.clientHeight;
-  const scaleX = (canvas.width * 0.82) / mapMeta.width;
-  const scaleY = (canvas.height * 0.82) / mapMeta.height;
-  view.scale = Math.max(0.2, Math.min(scaleX, scaleY));
+  const stage = canvas.parentElement;
+  if (!stage || stage.clientWidth < 20 || stage.clientHeight < 20) return;
+  canvas.width = stage.clientWidth;
+  canvas.height = stage.clientHeight;
+  const scaleX = (canvas.width * 0.85) / mapMeta.width;
+  const scaleY = (canvas.height * 0.85) / mapMeta.height;
+  view.scale = Math.max(0.15, Math.min(scaleX, scaleY));
   view.offsetX = (canvas.width - mapMeta.width * view.scale) / 2;
   view.offsetY = (canvas.height - mapMeta.height * view.scale) / 2;
   view.initialized = true;
 }
 
 function zoomMap(factor, centerX = canvas.width / 2, centerY = canvas.height / 2) {
-  const newScale = Math.max(0.3, Math.min(25.0, view.scale * factor));
+  const newScale = Math.max(0.15, Math.min(25.0, view.scale * factor));
   const actualFactor = newScale / view.scale;
   view.offsetX = centerX - (centerX - view.offsetX) * actualFactor;
   view.offsetY = centerY - (centerY - view.offsetY) * actualFactor;
@@ -197,9 +227,21 @@ function zoomMap(factor, centerX = canvas.width / 2, centerY = canvas.height / 2
 }
 
 window.addEventListener("resize", () => {
-  canvas.width = canvas.parentElement.clientWidth;
-  canvas.height = canvas.parentElement.clientHeight;
+  fitMapToScreen();
+  if (window.innerWidth > 850) {
+    const sidebar = document.getElementById("controlSidebar");
+    sidebar.querySelectorAll(".panel").forEach((p) => (p.style.display = "flex"));
+  }
 });
+
+if (typeof ResizeObserver !== "undefined") {
+  const ro = new ResizeObserver(() => {
+    if (!view.initialized && mapMeta) {
+      fitMapToScreen();
+    }
+  });
+  ro.observe(document.getElementById("mapStage") || canvas.parentElement);
+}
 
 // ==========================================
 // 3. Interactive Canvas Rendering (30+ FPS)
@@ -469,11 +511,15 @@ function updateMapsDropdown(maps, active) {
 function renderWaypointsList(list) {
   waypoints = list || [];
   document.getElementById("wpCount").textContent = waypoints.length;
+  const mobCount = document.getElementById("mobWpCount");
+  if (mobCount) mobCount.textContent = waypoints.length;
 
   const listEl = document.getElementById("wpList");
   const relocSel = document.getElementById("relocSelect");
+  const quickStrip = document.getElementById("quickWpStrip");
   listEl.innerHTML = "";
   relocSel.innerHTML = "";
+  if (quickStrip) quickStrip.innerHTML = "";
 
   if (waypoints.length === 0) {
     listEl.innerHTML = `<small class="hint">No saved locations for "${activeMapName}" yet.</small>`;
@@ -482,6 +528,7 @@ function renderWaypointsList(list) {
 
   waypoints.forEach((wp) => {
     const deg = Math.round((wp.yaw * 180) / Math.PI);
+    const safeName = wp.name.replace(/'/g, "\\'");
     const row = document.createElement("div");
     row.className = "wp-row";
     row.innerHTML = `
@@ -490,11 +537,19 @@ function renderWaypointsList(list) {
         <small>(${wp.x.toFixed(2)}m, ${wp.y.toFixed(2)}m, ${deg}°)</small>
       </div>
       <div class="wp-btns">
-        <button class="btn-go" onclick="goToSavedWaypoint('${wp.name.replace(/'/g, "\\'")}')">Go</button>
-        <button class="btn-del" onclick="deleteSavedWaypoint('${wp.name.replace(/'/g, "\\'")}')">✕</button>
+        <button class="btn-go" onclick="goToSavedWaypoint('${safeName}')">Go</button>
+        <button class="btn-del" onclick="deleteSavedWaypoint('${safeName}')">✕</button>
       </div>
     `;
     listEl.appendChild(row);
+
+    if (quickStrip) {
+      const chip = document.createElement("button");
+      chip.className = "quick-wp-chip";
+      chip.textContent = `🚀 ${wp.name}`;
+      chip.onclick = () => goToSavedWaypoint(wp.name);
+      quickStrip.appendChild(chip);
+    }
 
     const opt = document.createElement("option");
     opt.value = wp.name;
