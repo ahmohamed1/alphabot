@@ -19,11 +19,11 @@ is imported the same way from every launch file in this directory:
 import os
 
 VALID_ROBOT_MODELS = ['alphabot', 'servicebot']
-DEFAULT_ROBOT_MODEL = 'alphabot'
+DEFAULT_ROBOT_MODEL = 'servicebot'
 
 
 def get_robot_model():
-    """Read ROBOT_MODEL from the environment (default: 'alphabot').
+    """Read ROBOT_MODEL from the environment (default: 'servicebot').
 
     Raises ValueError if the value is not one of VALID_ROBOT_MODELS.
     """

@@ -18,7 +18,7 @@ def generate_launch_description():
 
     robot_model_arg = DeclareLaunchArgument(
         name="robot_model",
-        default_value=os.environ.get("ROBOT_MODEL", "alphabot"),
+        default_value=os.environ.get("ROBOT_MODEL", "servicebot"),
         description="Robot model to spawn. One of ['alphabot', 'servicebot']"
     )
 
@@ -45,6 +45,11 @@ def generate_launch_description():
         "GZ_SIM_RESOURCE_PATH",
         model_path
         )
+
+    rmw_env = SetEnvironmentVariable(
+        "RMW_IMPLEMENTATION",
+        "rmw_fastrtps_cpp"
+    )
 
     ros_distro = os.environ["ROS_DISTRO"]
     is_ignition = "True" if ros_distro == "humble" else "False"
@@ -78,7 +83,10 @@ def generate_launch_description():
         executable="create",
         output="screen",
         arguments=["-topic", "robot_description",
-                   "-name", LaunchConfiguration("robot_model")],
+                   "-name", LaunchConfiguration("robot_model"),
+                   "-x", "0.0",
+                   "-y", "0.0",
+                   "-z", "0.05"],
     )
 
     is_servicebot = PythonExpression(["'", LaunchConfiguration("robot_model"), "' == 'servicebot'"])
@@ -129,6 +137,7 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
+        rmw_env,
         robot_model_arg,
         model_arg,
         world_name_arg,

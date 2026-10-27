@@ -2,6 +2,7 @@
 #define ALPHABOT_FIRMWARE__ALPHABOT_INTERFACE_HPP_
 
 #include <string>
+#include <chrono>
 #include <thread>
 #include <vector>
 
@@ -27,6 +28,7 @@ public:
   CallbackReturn on_init(const hardware_interface::HardwareInfo &hardware_info) override;
   CallbackReturn on_activate(const rclcpp_lifecycle::State &) override;
   CallbackReturn on_deactivate(const rclcpp_lifecycle::State &) override;
+  CallbackReturn on_error(const rclcpp_lifecycle::State &) override;
 
   std::vector<hardware_interface::StateInterface> export_state_interfaces() override;
   std::vector<hardware_interface::CommandInterface> export_command_interfaces() override;
@@ -35,7 +37,14 @@ public:
   hardware_interface::return_type write(const rclcpp::Time &, const rclcpp::Duration &) override;
 
 private:
+  // Caller holds serialMutex.
+  bool closeConnection();
+  void clearWheelState();
+
   bool pico_connection_confirmed_{false};
+  std::chrono::steady_clock::time_point last_link_reply_;
+  std::chrono::steady_clock::time_point last_heartbeat_;
+  std::string receive_buffer_;
   rclcpp::Node::SharedPtr node_;
   rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr battery_pub_;
   std::thread spinner_thread_;

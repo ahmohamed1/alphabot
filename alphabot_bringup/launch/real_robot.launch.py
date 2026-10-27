@@ -3,7 +3,7 @@ import sys
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
+from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument, SetEnvironmentVariable
 from launch_ros.actions import Node
 from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch.conditions import IfCondition, UnlessCondition
@@ -65,6 +65,24 @@ def generate_launch_description():
     use_slam_arg = DeclareLaunchArgument(
         "use_slam",
         default_value="false"
+    )
+
+    map_name_arg = DeclareLaunchArgument(
+        "map_name",
+        default_value="small_house",
+        description="Default map name inside alphabot_mapping/maps for localization and Web GUI",
+    )
+
+    use_gui_arg = DeclareLaunchArgument(
+        "use_gui",
+        default_value="true",
+        description="Launch the local network Web GUI (alphabot_web_gui)",
+    )
+
+    gui_port_arg = DeclareLaunchArgument(
+        "gui_port",
+        default_value="8090",
+        description="HTTP/WebSocket port for the local network Web GUI",
     )
 
     hardware_interface = IncludeLaunchDescription(
@@ -149,7 +167,10 @@ def generate_launch_description():
             "global_localization.launch.py"
         ),
         condition=UnlessCondition(use_slam),
-        launch_arguments={"use_sim_time": "false"}.items()
+        launch_arguments={
+            "use_sim_time": "false",
+            "map_name": LaunchConfiguration("map_name"),
+        }.items()
     )
 
     slam = IncludeLaunchDescription(
@@ -184,6 +205,21 @@ def generate_launch_description():
         executable="mpu6050_driver.py"
     )
 
+    web_gui_launch = IncludeLaunchDescription(
+        os.path.join(
+            get_package_share_directory("alphabot_web_gui"),
+            "launch",
+            "web_gui.launch.py",
+        ),
+        condition=IfCondition(LaunchConfiguration("use_gui")),
+        launch_arguments={
+            "robot_model": robot_model,
+            "port": LaunchConfiguration("gui_port"),
+            "map_name": LaunchConfiguration("map_name"),
+            "use_sim_time": LaunchConfiguration("use_sim_time"),
+        }.items(),
+    )
+
 
     delayed_launch = TimerAction(
         period= 30.0,  # Adjust seconds as needed
@@ -194,6 +230,7 @@ def generate_launch_description():
     )
     return LaunchDescription(
         [
+            SetEnvironmentVariable("RMW_IMPLEMENTATION", "rmw_fastrtps_cpp"),
             robot_model_arg,
             serial_device_arg,
             scan_min_range_arg,
@@ -204,6 +241,9 @@ def generate_launch_description():
             scan_right_wall_max_angle_arg,
             use_sim_time_arg,
             use_slam_arg,
+            map_name_arg,
+            use_gui_arg,
+            gui_port_arg,
             hardware_interface,
             controller,
             scanner,
@@ -215,5 +255,6 @@ def generate_launch_description():
             delayed_launch,
             robot_localization_launch,
             imu_driver_node,
+            web_gui_launch,
         ]
     )

@@ -83,4 +83,15 @@ ament_export_dependencies(
   std_msgs
 )
 
+if(BUILD_TESTING)
+  enable_testing()
+  add_executable(test_serial_connection test/test_serial_connection.cpp)
+  target_include_directories(test_serial_connection PRIVATE include "${SERIAL_INCLUDE_DIRS}")
+  target_link_libraries(test_serial_connection ${PROJECT_NAME} util)
+  target_compile_options(test_serial_connection PRIVATE -UNDEBUG)
+  ament_target_dependencies(test_serial_connection hardware_interface rclcpp rclcpp_lifecycle std_msgs)
+  add_test(NAME serial_connection COMMAND test_serial_connection --ros-args -r __ns:=/alphabot_serial_test)
+  set_tests_properties(serial_connection PROPERTIES TIMEOUT 20 ENVIRONMENT "ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST")
+endif()
+
 ament_package()

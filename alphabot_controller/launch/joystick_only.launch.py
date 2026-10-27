@@ -4,6 +4,7 @@ from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch.actions import IncludeLaunchDescription
 from launch_ros.actions import Node
@@ -33,10 +34,12 @@ def generate_launch_description():
     )
     
     twist_mux_launch = IncludeLaunchDescription(
-        os.path.join(
-            get_package_share_directory("twist_mux"),
-            "launch",
-            "twist_mux_launch.py"
+        PythonLaunchDescriptionSource(
+            os.path.join(
+                get_package_share_directory("twist_mux"),
+                "launch",
+                "twist_mux_launch.py"
+            )
         ),
         launch_arguments={
             "cmd_vel_out": "alphabot_controller/cmd_vel_unstamped",
@@ -59,7 +62,7 @@ def generate_launch_description():
             use_sim_time_arg,
             joy_teleop,
             joy_node,
-            # twist_mux_launch,
-            # twist_relay_node,
+            twist_mux_launch,
+            twist_relay_node,
         ]
     )

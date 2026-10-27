@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>AlphaBot ROS 2 Control Center</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <!-- Top Status & Safety Header -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-dot" id="connDot"></span>
+      <div>
+        <h1>AlphaBot Control Center</h1>
+        <small id="lanUrlText">Connecting to robot...</small>
+      </div>
+    </div>
+
+    <div class="telemetry-strip">
+      <div class="stat-pill">
+        <span class="label">Robot Model</span>
+        <strong id="robotModelText" class="badge">servicebot</strong>
+      </div>
+      <div class="stat-pill">
+        <span class="label">Mode</span>
+        <strong id="modeBadge" class="badge mode-nav">NAVIGATION</strong>
+      </div>
+      <div class="stat-pill">
+        <span class="label">Active Map</span>
+        <strong id="activeMapText">small_house</strong>
+      </div>
+      <div class="stat-pill">
+        <span class="label">Nav2 Status</span>
+        <strong id="navStatusBadge" class="badge">IDLE</strong>
+      </div>
+      <div class="stat-pill">
+        <span class="label">Pose (m, deg)</span>
+        <strong id="poseText">0.00, 0.00, 0°</strong>
+      </div>
+      <div class="stat-pill">
+        <span class="label">Speed</span>
+        <strong id="velText">0.00 m/s | 0.00 rad/s</strong>
+      </div>
+    </div>
+
+    <div class="safety-actions">
+      <button id="btnSafetyLock" class="btn btn-outline-warn" onclick="toggleSafetyLock()">
+        🔓 Safety Lock: OFF
+      </button>
+      <button class="btn btn-estop" onclick="triggerEstop()">
+        🛑 E-STOP
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <main class="workspace">
+    <!-- Left Control Sidebar -->
+    <aside class="sidebar">
+      <!-- 1. Mode & Map Management -->
+      <section class="panel">
+        <div class="panel-header">
+          <h2>1. Mapping &amp; Mode Control</h2>
+        </div>
+        <div class="btn-grid-2">
+          <button id="btnModeMapping" class="btn" onclick="switchMode('MAPPING')">
+            🗺️ Build Map (SLAM)
+          </button>
+          <button id="btnModeNav" class="btn btn-active" onclick="switchMode('NAVIGATION')">
+            🧭 Navigate Map
+          </button>
+        </div>
+
+        <div class="field-group">
+          <label for="mapSelect">Saved Maps (`alphabot_mapping/maps`)</label>
+          <div class="input-row">
+            <select id="mapSelect"></select>
+            <button class="btn btn-primary" onclick="loadSelectedMap()">Load</button>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label for="newMapName">Save Current Map As</label>
+          <div class="input-row">
+            <input type="text" id="newMapName" placeholder="e.g. office_floor1" />
+            <button class="btn btn-success" onclick="saveCurrentMap()">💾 Save</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. Saved Named Locations (Waypoints) -->
+      <section class="panel panel-grow">
+        <div class="panel-header">
+          <h2>2. Saved Locations</h2>
+          <span class="count-tag" id="wpCount">0</span>
+        </div>
+
+        <div class="field-group">
+          <label for="wpNameInput">Save Robot's Current Position</label>
+          <div class="input-row">
+            <input type="text" id="wpNameInput" placeholder="e.g. Kitchen, Charging Dock" />
+            <button class="btn btn-primary" onclick="saveCurrentRobotPose()">+ Save Here</button>
+          </div>
+          <small class="hint">Tip: You can also use "📌 Pin Location" on the map to click &amp; drag any point.</small>
+        </div>
+
+        <div id="wpList" class="waypoint-list"></div>
+      </section>
+
+      <!-- 3. Quick Relocalization (Initial Pose) -->
+      <section class="panel">
+        <div class="panel-header">
+          <h2>3. Localization (Initial Pose)</h2>
+        </div>
+        <div class="field-group">
+          <label for="relocSelect">Robot is currently standing at:</label>
+          <div class="input-row">
+            <select id="relocSelect"></select>
+            <button class="btn" onclick="relocalizeAtSelected()">🎯 Set Pose</button>
+          </div>
+        </div>
+      </section>
+    </aside>
+
+    <!-- Interactive Map Viewport -->
+    <section class="map-stage">
+      <!-- Map Interaction Toolbar -->
+      <div class="map-toolbar">
+        <button id="toolGoal" class="tool-btn active" onclick="setMapTool('GOAL')" title="Click & drag on map to send robot">
+          🚀 Send Goal
+        </button>
+        <button id="toolSaveWp" class="tool-btn" onclick="setMapTool('SAVE_WP')" title="Click & drag on map to save a named location">
+          📌 Pin Location
+        </button>
+        <button id="toolInitPose" class="tool-btn" onclick="setMapTool('INIT_POSE')" title="Click & drag on map to set 2D Pose Estimate">
+          🧭 2D Pose Estimate
+        </button>
+        <button id="toolPan" class="tool-btn" onclick="setMapTool('PAN')" title="Drag to pan map">
+          ✋ Pan Map
+        </button>
+        <div class="toolbar-divider"></div>
+        <button class="tool-btn" onclick="zoomMap(1.25)" title="Zoom In">➕</button>
+        <button class="tool-btn" onclick="zoomMap(0.8)" title="Zoom Out">➖</button>
+        <button class="tool-btn" onclick="fitMapToScreen()" title="Reset View">🔍 Fit</button>
+        <button class="tool-btn btn-cancel-nav" onclick="cancelNavigation()" title="Cancel active Nav2 goal">
+          ⏹ Cancel Goal
+        </button>
+      </div>
+
+      <!-- Map Canvas -->
+      <canvas id="mapCanvas"></canvas>
+
+      <!-- Map Legend & Cursor Coordinates -->
+      <div class="map-footer-info">
+        <span><i class="dot dot-robot"></i> Robot</span>
+        <span><i class="dot dot-lidar"></i> LiDAR (`/scan`)</span>
+        <span><i class="dot dot-path"></i> Nav2 Path</span>
+        <span><i class="dot dot-wp"></i> Saved Point</span>
+        <span id="cursorCoords">X: 0.00 m, Y: 0.00 m</span>
+      </div>
+
+      <!-- Virtual Teleop Joystick Card -->
+      <div class="teleop-dock">
+        <div class="teleop-header">
+          <span>🕹️ Teleop (`WASD` / Touch)</span>
+          <label class="speed-slider-label">
+            Max: <strong id="maxSpeedVal">0.35</strong> m/s
+            <input type="range" id="maxSpeedSlider" min="0.10" max="0.50" step="0.05" value="0.35" />
+          </label>
+        </div>
+        <div class="joystick-base" id="joystickBase">
+          <div class="joystick-crosshair"></div>
+          <div class="joystick-Stick" id="joystickStick"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal for naming a clicked map location -->
+  <div id="wpModal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <h3>📌 Save Location on Map</h3>
+      <p id="wpModalCoords" class="modal-sub"></p>
+      <input type="text" id="wpModalInput" placeholder="Enter location name (e.g. Station A)" />
+      <div class="modal-actions">
+        <button class="btn" onclick="closeWpModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="confirmWpModal()">Save Location</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+  <script src="/app.js"></script>
+</body>
+</html>
