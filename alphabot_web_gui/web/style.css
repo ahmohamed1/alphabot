@@ -120,12 +120,18 @@ body {
   color: var(--primary);
 }
 
-.badge.mode-map {
+.badge.mode-map,
+.badge.stat-warn {
   color: var(--warning);
 }
 
-.badge.mode-nav {
+.badge.mode-nav,
+.badge.stat-ok {
   color: var(--success);
+}
+
+.badge.stat-danger {
+  color: var(--danger);
 }
 
 .safety-actions {

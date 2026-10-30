@@ -138,6 +138,33 @@ function applyTelemetry(data) {
       `${robotVel.vx.toFixed(2)} m/s | ${robotVel.wz.toFixed(2)} rad/s`;
   }
 
+  if (data.system) {
+    const sys = data.system;
+    const cpuEl = document.getElementById("cpuText");
+    const ramEl = document.getElementById("ramText");
+    if (cpuEl) {
+      const tempStr = sys.cpu_temp_c !== null && sys.cpu_temp_c !== undefined ? ` (${sys.cpu_temp_c.toFixed(0)}°C)` : "";
+      cpuEl.textContent = `${sys.cpu_percent.toFixed(1)}%${tempStr}`;
+      cpuEl.className =
+        "badge " +
+        (sys.cpu_percent >= 85
+          ? "stat-danger"
+          : sys.cpu_percent >= 65
+          ? "stat-warn"
+          : "stat-ok");
+    }
+    if (ramEl) {
+      ramEl.textContent = `${sys.ram_percent.toFixed(1)}% (${sys.ram_used_gb}/${sys.ram_total_gb} GB)`;
+      ramEl.className =
+        "badge " +
+        (sys.ram_percent >= 88
+          ? "stat-danger"
+          : sys.ram_percent >= 75
+          ? "stat-warn"
+          : "stat-ok");
+    }
+  }
+
   const lockBtn = document.getElementById("btnSafetyLock");
   lockBtn.textContent = safetyLocked ? "🔒 Lock: ON" : "🔓 Lock: OFF";
   lockBtn.classList.toggle("locked", safetyLocked);

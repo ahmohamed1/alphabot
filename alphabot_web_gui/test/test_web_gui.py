@@ -233,6 +233,9 @@ def test_gateway_http_and_websocket_integration(tmp_path: Path):
                 telemetry = json.loads(payload_bytes.decode("utf-8"))
                 assert telemetry["type"] == "telemetry"
                 assert "map" in telemetry
+                assert "system" in telemetry
+                assert 0.0 <= telemetry["system"]["cpu_percent"] <= 100.0
+                assert 0.0 < telemetry["system"]["ram_total_gb"]
 
                 # Send a masked client WebSocket frame with cmd_vel
                 cmd_bytes = json.dumps(

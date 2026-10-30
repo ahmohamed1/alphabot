@@ -235,6 +235,18 @@ class AlphaBotWebGatewayNode(Node):
         self.last_cmd_vel_time = 0.0
         self.is_teleop_active = False
 
+        # System resource metrics (CPU %, RAM %, GB, Temp)
+        self._prev_cpu_total = 0
+        self._prev_cpu_idle = 0
+        self.system_stats: Dict[str, Any] = {
+            "cpu_percent": 0.0,
+            "ram_percent": 0.0,
+            "ram_used_gb": 0.0,
+            "ram_total_gb": 0.0,
+            "cpu_temp_c": None,
+        }
+        self._update_system_metrics()
+
         # Preload static map from disk only if a default_map was explicitly specified
         if default_map:
             self._try_preload_static_map(self.active_map_name)
@@ -248,8 +260,8 @@ class AlphaBotWebGatewayNode(Node):
             0.10, self.update_tf_pose_cb, clock=self._steady_clock
         )  # 10Hz TF lookup
         self.create_timer(
-            2.00, self.periodic_state_sync_cb, clock=self._steady_clock
-        )  # 0.5Hz state & node check
+            1.00, self.periodic_state_sync_cb, clock=self._steady_clock
+        )  # 1Hz state, node & CPU/RAM check
 
     def _try_preload_static_map(self, map_name: str) -> bool:
         loaded = self.map_mgr.load_static_map_as_grid(map_name)
@@ -343,8 +355,59 @@ class AlphaBotWebGatewayNode(Node):
                 except Exception:
                     continue
 
+    def _update_system_metrics(self) -> None:
+        try:
+            # 1. CPU % from /proc/stat
+            stat_line = Path("/proc/stat").read_text(encoding="utf-8").splitlines()[0]
+            parts = [int(x) for x in stat_line.split()[1:]]
+            idle = parts[3] + (parts[4] if len(parts) > 4 else 0)
+            total = sum(parts)
+            total_diff = total - self._prev_cpu_total
+            idle_diff = idle - self._prev_cpu_idle
+            self._prev_cpu_total = total
+            self._prev_cpu_idle = idle
+            cpu_pct = (
+                round(max(0.0, min(100.0, (1.0 - idle_diff / total_diff) * 100.0)), 1)
+                if total_diff > 0
+                else 0.0
+            )
+
+            # 2. RAM % and GB from /proc/meminfo
+            mem_info: Dict[str, int] = {}
+            for line in Path("/proc/meminfo").read_text(encoding="utf-8").splitlines():
+                if ":" in line:
+                    k, v = line.split(":", 1)
+                    val_parts = v.strip().split()
+                    if val_parts and val_parts[0].isdigit():
+                        mem_info[k.strip()] = int(val_parts[0])
+            mem_total_kb = mem_info.get("MemTotal", 1)
+            mem_avail_kb = mem_info.get("MemAvailable", mem_info.get("MemFree", 0))
+            mem_used_kb = max(0, mem_total_kb - mem_avail_kb)
+            ram_pct = round((mem_used_kb / mem_total_kb) * 100.0, 1)
+            ram_used_gb = round(mem_used_kb / (1024 * 1024), 1)
+            ram_total_gb = round(mem_total_kb / (1024 * 1024), 1)
+
+            # 3. Optional CPU temperature (°C)
+            cpu_temp_c = None
+            temp_file = Path("/sys/class/thermal/thermal_zone0/temp")
+            if temp_file.is_file():
+                raw_t = temp_file.read_text(encoding="utf-8").strip()
+                if raw_t.isdigit():
+                    cpu_temp_c = round(int(raw_t) / 1000.0, 1)
+
+            self.system_stats = {
+                "cpu_percent": cpu_pct,
+                "ram_percent": ram_pct,
+                "ram_used_gb": ram_used_gb,
+                "ram_total_gb": ram_total_gb,
+                "cpu_temp_c": cpu_temp_c,
+            }
+        except Exception:
+            pass
+
     def periodic_state_sync_cb(self) -> None:
         try:
+            self._update_system_metrics()
             self.map_mgr.set_state("last_pose", self.robot_pose)
             self.map_mgr.set_state("active_map", self.active_map_name)
             node_names = self.get_node_names()
@@ -744,6 +807,7 @@ class AlphaBotWebGatewayNode(Node):
             "safety_locked": self.safety_locked,
             "pose": self.robot_pose,
             "velocity": self.robot_vel,
+            "system": self.system_stats,
             "scan": self.latest_scan_points,
             "path": self.latest_path_points,
             "map_version": self.map_version,
