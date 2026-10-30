@@ -121,7 +121,7 @@ MappingWithKnownPoses::MappingWithKnownPoses(const std::string &name)
     map_.info.height = std::round(height / map_.info.resolution);
     map_.info.origin.position.x = - std::round(width / 2.0);
     map_.info.origin.position.y = - std::round(height / 2.0);
-    map_.header.frame_id = "odom";
+    map_.header.frame_id = "map";
 
     // Init map with prior probability
     map_.data = std::vector<int8_t>(map_.info.height * map_.info.width, -1);
@@ -131,7 +131,8 @@ MappingWithKnownPoses::MappingWithKnownPoses(const std::string &name)
     tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
     scan_sub_ = create_subscription<sensor_msgs::msg::LaserScan>(
         "scan", 10, std::bind(&MappingWithKnownPoses::scanCallback, this, _1));
-    map_pub_ = create_publisher<nav_msgs::msg::OccupancyGrid>("map", 1);
+    map_pub_ = create_publisher<nav_msgs::msg::OccupancyGrid>(
+        "map", rclcpp::QoS(1).transient_local().reliable());
     timer_ = create_wall_timer(1s, std::bind(&MappingWithKnownPoses::timerCallback, this));
 }
 
@@ -140,11 +141,10 @@ void MappingWithKnownPoses::scanCallback(const sensor_msgs::msg::LaserScan &scan
     geometry_msgs::msg::TransformStamped t;
     try
     {
-        t = tf_buffer_->lookupTransform(map_.header.frame_id, scan.header.frame_id, tf2::TimePointZero);
+        t = tf_buffer_->lookupTransform("odom", scan.header.frame_id, tf2::TimePointZero);
     }
     catch (const tf2::TransformException &ex)
     {
-        RCLCPP_ERROR(get_logger(), "Unable to transform between /odom and /base_footprint");
         return;
     }
 
@@ -166,10 +166,15 @@ void MappingWithKnownPoses::scanCallback(const sensor_msgs::msg::LaserScan &scan
 
     for (size_t i = 0; i < scan.ranges.size(); i++)
     {
+      const double r = scan.ranges.at(i);
+      if (!std::isfinite(r) || r < scan.range_min || r >= scan.range_max)
+      {
+        continue;
+      }
       // Polar to cartesian coordinates
       double angle = scan.angle_min + (i * scan.angle_increment) + yaw;
-      double px = scan.ranges.at(i) * std::cos(angle);
-      double py = scan.ranges.at(i) * std::sin(angle);
+      double px = r * std::cos(angle);
+      double py = r * std::sin(angle);
       px += t.transform.translation.x;
       py += t.transform.translation.y;
 
@@ -185,7 +190,10 @@ void MappingWithKnownPoses::scanCallback(const sensor_msgs::msg::LaserScan &scan
         if(poseOnMap(pose.first, map_.info))
         {
             unsigned int cell = poseToCell(pose.first, map_.info);
-            probability_map_.at(cell) += prob2logodds(pose.second) - prob2logodds(PRIOR_PROB);
+            probability_map_.at(cell) = std::clamp(
+                probability_map_.at(cell) + prob2logodds(pose.second) - prob2logodds(PRIOR_PROB),
+                -5.0,
+                5.0);
         }
       }
     }
@@ -193,9 +201,13 @@ void MappingWithKnownPoses::scanCallback(const sensor_msgs::msg::LaserScan &scan
 
 void MappingWithKnownPoses::timerCallback()
 {
-    // Convert to occupancy grid and publish
-    std::transform(probability_map_.begin(), probability_map_.end(), map_.data.begin(), [](double value){
-        return logodds2prob(value) * 100;
+    const double prior_lo = prob2logodds(PRIOR_PROB);
+    // Convert to occupancy grid and publish (-1 for unexplored cells)
+    std::transform(probability_map_.begin(), probability_map_.end(), map_.data.begin(), [prior_lo](double value){
+        if (std::abs(value - prior_lo) < 1e-6) {
+            return static_cast<int8_t>(-1);
+        }
+        return static_cast<int8_t>(logodds2prob(value) * 100.0);
     });
     map_.header.stamp = get_clock()->now();
     map_pub_->publish(map_);

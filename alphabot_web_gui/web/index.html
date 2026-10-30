@@ -35,15 +35,15 @@
       </div>
       <div class="stat-pill">
         <span class="label">Mode</span>
-        <strong id="modeBadge" class="badge mode-nav">NAVIGATION</strong>
+        <strong id="modeBadge" class="badge">STANDBY</strong>
       </div>
       <div class="stat-pill">
         <span class="label">Map</span>
-        <strong id="activeMapText">small_house</strong>
+        <strong id="activeMapText">unmapped</strong>
       </div>
       <div class="stat-pill">
         <span class="label">Nav2 Status</span>
-        <strong id="navStatusBadge" class="badge">IDLE</strong>
+        <strong id="navStatusBadge" class="badge">STANDBY</strong>
       </div>
       <div class="stat-pill">
         <span class="label">Pose (m, deg)</span>
@@ -69,7 +69,7 @@
           <button id="btnModeMapping" class="btn" onclick="switchMode('MAPPING')">
             🗺️ Build Map (SLAM)
           </button>
-          <button id="btnModeNav" class="btn btn-active" onclick="switchMode('NAVIGATION')">
+          <button id="btnModeNav" class="btn" onclick="switchMode('NAVIGATION')">
             🧭 Navigate Map
           </button>
         </div>

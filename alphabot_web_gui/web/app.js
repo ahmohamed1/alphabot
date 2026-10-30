@@ -11,8 +11,8 @@ let waypoints = [];
 let activeGoal = null;
 let availableMaps = [];
 let safetyLocked = false;
-let currentMode = "NAVIGATION";
-let activeMapName = "small_house";
+let currentMode = "STANDBY";
+let activeMapName = "unmapped";
 let robotModelName = "servicebot";
 let robotRadiusMeters = 0.22;
 
@@ -146,7 +146,10 @@ function applyTelemetry(data) {
   pathPoints = data.path || [];
   activeGoal = data.active_goal || null;
 
-  if (data.map) {
+  if (data.has_map === false) {
+    mapMeta = null;
+    view.initialized = false;
+  } else if (data.map) {
     const prevW = mapMeta ? mapMeta.width : 0;
     const prevH = mapMeta ? mapMeta.height : 0;
     mapMeta = data.map;
@@ -388,14 +391,55 @@ function renderLoop() {
       ctx.restore();
     }
   } else {
-    ctx.fillStyle = "#94a3b8";
-    ctx.font = "15px sans-serif";
+    // Live Metric LiDAR Radar View when in STANDBY (First-Time Environment) or awaiting SLAM /map
+    const cx = canvas.width / 2;
+    const cy = canvas.height / 2;
+    const pxPerMeter = Math.min(canvas.width, canvas.height) / 8.0;
+
+    ctx.save();
+    // Draw radar range rings (1m, 2m, 3m)
+    ctx.strokeStyle = "rgba(148, 163, 184, 0.16)";
+    ctx.fillStyle = "rgba(148, 163, 184, 0.45)";
+    ctx.font = "11px sans-serif";
+    [1, 2, 3].forEach((m) => {
+      ctx.beginPath();
+      ctx.arc(cx, cy, m * pxPerMeter, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillText(`${m}m`, cx + m * pxPerMeter + 4, cy - 4);
+    });
+
+    // Draw live LiDAR scan points relative to robot
+    ctx.fillStyle = "#ef4444";
+    scanPoints.forEach(([wx, wy]) => {
+      const sx = cx + (wx - robotPose.x) * pxPerMeter;
+      const sy = cy - (wy - robotPose.y) * pxPerMeter;
+      ctx.fillRect(sx - 2, sy - 2, 4, 4);
+    });
+
+    // Draw robot at center
+    ctx.translate(cx, cy);
+    ctx.rotate(-robotPose.yaw);
+    const rPx = Math.max(8, robotRadiusMeters * pxPerMeter);
+    ctx.fillStyle = "rgba(56, 189, 248, 0.88)";
+    ctx.beginPath();
+    ctx.arc(0, 0, rPx, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(rPx * 1.6, 0);
+    ctx.stroke();
+    ctx.restore();
+
+    ctx.fillStyle = "#cbd5e1";
+    ctx.font = "bold 14px sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText(
-      "Waiting for map data (/map) or static map preview...",
-      canvas.width / 2,
-      canvas.height / 2
-    );
+    const statusMsg =
+      currentMode === "MAPPING"
+        ? "Starting SLAM... Drive with the joystick to build the map!"
+        : "First-Time / Standby Mode: Tap '🗺️ Build Map (SLAM)' or Load a Saved Map";
+    ctx.fillText(statusMsg, canvas.width / 2, 78);
   }
 
   requestAnimationFrame(renderLoop);
@@ -718,7 +762,8 @@ async function loadSelectedMap() {
     return;
   }
   renderWaypointsList(data.waypoints);
-  showToast(`🗺️ Loaded map "${map_name}"`);
+  setMobileTab("map");
+  showToast(`🗺️ Loaded map "${map_name}" and started Navigation mode`);
 }
 
 async function switchMode(mode) {
@@ -734,6 +779,7 @@ async function switchMode(mode) {
     showToast("⚠️ " + data.detail);
     return;
   }
+  setMobileTab("map");
   showToast(`✅ Robot is now in ${data.mode} mode`);
 }
 

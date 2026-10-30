@@ -3,7 +3,7 @@ import sys
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument, RegisterEventHandler, SetEnvironmentVariable
 from launch.conditions import IfCondition, UnlessCondition
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
@@ -46,9 +46,16 @@ def generate_launch_description():
 
     map_name_arg = DeclareLaunchArgument(
         name="map_name",
-        default_value="small_house",
-        description="Map name inside alphabot_mapping/maps for localization and Web GUI",
+        default_value="",
+        description="Optional map name inside alphabot_mapping/maps (empty starts in First-Time Standby mode controlled via Web GUI)",
     )
+
+    has_map = PythonExpression([
+        "'", LaunchConfiguration("map_name"), "' != '' and '", use_slam, "' != 'true'"
+    ])
+    should_autostart_nav = PythonExpression([
+        "'", LaunchConfiguration("map_name"), "' != '' or '", use_slam, "' == 'true'"
+    ])
 
     use_rviz_arg = DeclareLaunchArgument(
         name="use_rviz",
@@ -128,7 +135,7 @@ def generate_launch_description():
                 "global_localization.launch.py"
             )
         ),
-        condition=UnlessCondition(use_slam),
+        condition=IfCondition(has_map),
         launch_arguments={
             "use_sim_time": LaunchConfiguration("use_sim_time"),
             "map_name": LaunchConfiguration("map_name"),
@@ -157,6 +164,7 @@ def generate_launch_description():
                 "navigation.launch.py"
             )
         ),
+        condition=IfCondition(should_autostart_nav),
         launch_arguments={
             "use_sim_time": LaunchConfiguration("use_sim_time"),
         }.items(),

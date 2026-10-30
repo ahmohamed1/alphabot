@@ -69,9 +69,16 @@ def generate_launch_description():
 
     map_name_arg = DeclareLaunchArgument(
         "map_name",
-        default_value="small_house",
-        description="Default map name inside alphabot_mapping/maps for localization and Web GUI",
+        default_value="",
+        description="Optional map name inside alphabot_mapping/maps (empty starts in First-Time Standby mode controlled via Web GUI)",
     )
+
+    has_map = PythonExpression([
+        "'", LaunchConfiguration("map_name"), "' != '' and '", use_slam, "' != 'true'"
+    ])
+    should_autostart_nav = PythonExpression([
+        "'", LaunchConfiguration("map_name"), "' != '' or '", use_slam, "' == 'true'"
+    ])
 
     use_gui_arg = DeclareLaunchArgument(
         "use_gui",
@@ -166,7 +173,7 @@ def generate_launch_description():
             "launch",
             "global_localization.launch.py"
         ),
-        condition=UnlessCondition(use_slam),
+        condition=IfCondition(has_map),
         launch_arguments={
             "use_sim_time": "false",
             "map_name": LaunchConfiguration("map_name"),
@@ -189,6 +196,7 @@ def generate_launch_description():
             "launch",
             "navigation.launch.py"
         ),
+        condition=IfCondition(should_autostart_nav),
         launch_arguments={"use_sim_time": "false"}.items()
     )
 

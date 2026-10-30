@@ -111,7 +111,7 @@ class AlphaBotWebGatewayNode(Node):
         self.declare_parameter("port", 8090)
         self.declare_parameter("cmd_vel_topic", "/key_vel")
         self.declare_parameter("safety_stop_topic", "/safety_stop")
-        self.declare_parameter("default_map", "small_house")
+        self.declare_parameter("default_map", "")
         self.declare_parameter("max_linear_speed", 0.40)
         self.declare_parameter("max_angular_speed", 1.50)
         self.declare_parameter("watchdog_timeout_sec", 0.30)
@@ -125,7 +125,7 @@ class AlphaBotWebGatewayNode(Node):
         self.port: int = int(self.get_parameter("port").value)
         self.cmd_vel_topic: str = self.get_parameter("cmd_vel_topic").value
         self.safety_stop_topic: str = self.get_parameter("safety_stop_topic").value
-        default_map: str = self.get_parameter("default_map").value
+        default_map: str = str(self.get_parameter("default_map").value).strip()
         self.max_linear_speed: float = float(
             self.get_parameter("max_linear_speed").value
         )
@@ -146,10 +146,11 @@ class AlphaBotWebGatewayNode(Node):
         actual_map_dirs = mapping_dirs or resolve_mapping_directories()
         self.map_mgr = MapAndWaypointManager(actual_db, actual_map_dirs)
 
-        persisted_map = self.map_mgr.get_state("active_map", default_map)
-        self.active_map_name: str = persisted_map or default_map
+        # Start in STANDBY (First-Time Environment mode) unless a map was explicitly requested
+        self.active_map_name: str = default_map if default_map else "unmapped"
+        initial_mode = "NAVIGATION" if default_map else "STANDBY"
         self.mode_mgr = ModeManager(
-            initial_mode="NAVIGATION", initial_map=self.active_map_name
+            initial_mode=initial_mode, initial_map=self.active_map_name
         )
 
         # Publishers
@@ -234,8 +235,9 @@ class AlphaBotWebGatewayNode(Node):
         self.last_cmd_vel_time = 0.0
         self.is_teleop_active = False
 
-        # Preload static map from disk so UI shows map immediately even during bringup timer
-        self._try_preload_static_map(self.active_map_name)
+        # Preload static map from disk only if a default_map was explicitly specified
+        if default_map:
+            self._try_preload_static_map(self.active_map_name)
 
         # Use STEADY_TIME clock for internal timers so they never stall if /clock is paused
         self._steady_clock = Clock(clock_type=ClockType.STEADY_TIME)
@@ -620,14 +622,17 @@ class AlphaBotWebGatewayNode(Node):
         self.map_mgr.set_state("active_map", map_name)
         self._try_preload_static_map(map_name)
 
-        # If map_server is active, call /map_server/load_map service asynchronously
-        if self.load_map_client.service_is_ready():
+        # If map_server is already active, call /map_server/load_map service; otherwise switch to NAVIGATION mode
+        if self.load_map_client.service_is_ready() and self.mode_mgr.current_mode == "NAVIGATION":
             req = LoadMap.Request()
             req.map_url = str(yaml_path)
             self.load_map_client.call_async(req)
+        else:
+            self.switch_operating_mode("NAVIGATION", map_name)
 
         return {
             "status": "loaded",
+            "mode": self.mode_mgr.current_mode,
             "active_map": self.active_map_name,
             "waypoints": self.map_mgr.list_waypoints(self.active_map_name),
         }
@@ -640,6 +645,14 @@ class AlphaBotWebGatewayNode(Node):
         is_2d_sim = "alphabot_2d_simulator" in self.get_node_names()
 
         if target_mode == "MAPPING":
+            # Clear any previously loaded static map so live SLAM builds a fresh map
+            self.grid_width = 0
+            self.grid_height = 0
+            self.grid_data = None
+            self.latest_map_payload = None
+            self.map_version += 1
+            self.active_map_name = "unmapped_slam"
+
             if is_2d_sim:
                 msg = Bool()
                 msg.data = True
@@ -655,7 +668,14 @@ class AlphaBotWebGatewayNode(Node):
                 "active_map": self.active_map_name,
             }
         elif target_mode == "NAVIGATION":
-            chosen_map = map_name or self.active_map_name
+            chosen_map = (map_name or self.active_map_name or "").strip()
+            if not chosen_map or chosen_map in ("unmapped", "unmapped_slam"):
+                avail = self.map_mgr.list_available_maps()
+                if not avail:
+                    raise ValueError(
+                        "No saved maps exist yet! Start 'Build Map (SLAM)' and save a map first."
+                    )
+                chosen_map = avail[0]["name"]
             yaml_path = self.map_mgr.find_map_yaml(chosen_map)
             if yaml_path is None:
                 raise FileNotFoundError(
@@ -679,14 +699,15 @@ class AlphaBotWebGatewayNode(Node):
                     map_name=chosen_map,
                     use_sim_time=self.use_sim_time_for_switches,
                 )
-                # Auto-publish last known pose after AMCL starts up
+                # Auto-publish current pose after AMCL starts up
                 saved_pose = dict(self.robot_pose)
-                threading.Timer(
-                    3.5,
-                    lambda: self.publish_initial_pose(
-                        saved_pose["x"], saved_pose["y"], saved_pose["yaw"]
-                    ),
-                ).start()
+                for delay_s in (3.0, 5.5):
+                    threading.Timer(
+                        delay_s,
+                        lambda p=saved_pose: self.publish_initial_pose(
+                            p["x"], p["y"], p["yaw"]
+                        ),
+                    ).start()
             return {
                 "status": "ok",
                 "mode": "NAVIGATION",
@@ -702,11 +723,13 @@ class AlphaBotWebGatewayNode(Node):
                 nav_ready = self.nav_client.server_is_ready()
         except Exception:
             pass
-        effective_nav_status = (
-            "STARTING_NAV2"
-            if (not nav_ready and self.nav_status == "IDLE")
-            else self.nav_status
-        )
+        if self.mode_mgr.current_mode == "STANDBY" and not nav_ready:
+            effective_nav_status = "STANDBY"
+        elif not nav_ready and self.nav_status == "IDLE":
+            effective_nav_status = "STARTING_NAV2"
+        else:
+            effective_nav_status = self.nav_status
+
         snap: Dict[str, Any] = {
             "type": "telemetry",
             "robot_model": self.robot_model,
@@ -724,6 +747,7 @@ class AlphaBotWebGatewayNode(Node):
             "scan": self.latest_scan_points,
             "path": self.latest_path_points,
             "map_version": self.map_version,
+            "has_map": self.latest_map_payload is not None,
         }
         if include_map and self.latest_map_payload is not None:
             snap["map"] = self.latest_map_payload
@@ -887,6 +911,8 @@ def build_web_server(node: AlphaBotWebGatewayNode) -> AsyncHttpWsServer:
         try:
             while not ws.closed:
                 now = time.monotonic()
+                if node.latest_map_payload is None:
+                    last_sent_map_ver = -1
                 need_map = (
                     node.latest_map_payload is not None
                     and node.map_version != last_sent_map_ver

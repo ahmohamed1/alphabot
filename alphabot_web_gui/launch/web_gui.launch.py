@@ -24,8 +24,8 @@ def generate_launch_description():
     )
     default_map_arg = DeclareLaunchArgument(
         "map_name",
-        default_value="small_house",
-        description="Default map name inside alphabot_mapping/maps",
+        default_value="",
+        description="Optional initial map name inside alphabot_mapping/maps (empty starts in Standby mode)",
     )
     cmd_vel_topic_arg = DeclareLaunchArgument(
         "cmd_vel_topic",
